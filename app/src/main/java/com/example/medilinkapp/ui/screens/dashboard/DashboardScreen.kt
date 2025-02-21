@@ -108,13 +108,15 @@ fun DashboardScreen(navController: NavController) {
                                 imageRes = R.drawable.ai,
                                 title = "AI Symptom Checker",
                                 description = "Instantly assess your symptoms with AI-powered insights.",
-                                modifier = Modifier.weight(1f) // Makes cards equally sized
+                                modifier = Modifier.weight(1f),
+                                onClick = { navController.navigate("symptom_checker") } // Add navigation action
                             )
+
                             ServiceCard(
                                 imageRes = R.drawable.prescriptions,
                                 title = "E-Prescriptions",
                                 description = "Get digital prescriptions from doctors for easy access.",
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
                             )
                         }
                         Spacer(modifier = Modifier.height(12.dp))
@@ -188,11 +190,18 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
 
 
 @Composable
-fun ServiceCard(imageRes: Int, title: String, description: String, modifier: Modifier = Modifier) {
+fun ServiceCard(
+    imageRes: Int,
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null // Add nullable onClick parameter
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(180.dp), // Fixed height to make all cards equal
+            .height(180.dp)
+            .clickable(onClick != null) { onClick?.invoke() }, // Make card clickable if onClick is provided
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.elevatedCardElevation(6.dp)
     ) {
@@ -202,7 +211,7 @@ fun ServiceCard(imageRes: Int, title: String, description: String, modifier: Mod
                 contentDescription = title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f) // Ensures a consistent image proportion
+                    .aspectRatio(16f / 9f)
                     .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                 contentScale = ContentScale.Crop
             )
@@ -216,7 +225,7 @@ fun ServiceCard(imageRes: Int, title: String, description: String, modifier: Mod
                     text = description,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 2, // Limits text to avoid uneven heights
+                    maxLines = 2,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
             }
