@@ -48,7 +48,7 @@ fun DashboardScreen(navController: NavController) {
                         .fillMaxWidth()
                         .background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(MaterialTheme.colorScheme.primary, Color.White)
+                                colors = listOf(Color(0xFF2196F3), Color.White)
                             )
                         )
                         .padding(20.dp)
@@ -65,13 +65,13 @@ fun DashboardScreen(navController: NavController) {
                                 .clip(CircleShape)
                                 .background(Color.White)
                                 .padding(4.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = Color(0xFF1976D2)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text("Welcome Back, Anne", style = MaterialTheme.typography.headlineSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = Color.Black
                             ))
                             Text("Your Health, Our Priority", style = MaterialTheme.typography.bodyMedium)
                         }
