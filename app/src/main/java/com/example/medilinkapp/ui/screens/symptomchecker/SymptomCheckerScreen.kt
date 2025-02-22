@@ -104,7 +104,7 @@ fun SymptomCheckerScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick = {
+                    onClick ={
                         if (userInput.text.isNotBlank()) {
                             val response = getAISymptomResponse(userInput.text)
                             chatHistory = chatHistory + (userInput.text to response)
