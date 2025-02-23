@@ -18,19 +18,23 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.example.medilinkapp.network.AIRequest
 import com.example.medilinkapp.network.Content
 import com.example.medilinkapp.network.MedicalApiService
 import com.example.medilinkapp.network.Part
 import kotlinx.coroutines.launch
-
 @Composable
 fun SymptomCheckerScreen(navController: NavController) {
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
     var chatHistory by remember { mutableStateOf(listOf<Pair<String, String>>()) }
+    var loading by remember { mutableStateOf(false) }
     val keyboardController = LocalSoftwareKeyboardController.current
     val coroutineScope = rememberCoroutineScope()
     val apiService = remember { MedicalApiService.create() }
+    val listState = rememberLazyListState()
 
     MedilinkAppTheme {
         Column(
@@ -38,9 +42,10 @@ fun SymptomCheckerScreen(navController: NavController) {
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(16.dp)
-                .imePadding(), // Ensures padding when keyboard is open
+                .imePadding(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -60,6 +65,7 @@ fun SymptomCheckerScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Chat History
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -67,25 +73,32 @@ fun SymptomCheckerScreen(navController: NavController) {
                     .background(Color(0xFFF5F5F5), shape = RoundedCornerShape(16.dp))
                     .padding(16.dp)
             ) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    chatHistory.forEach { (user, ai) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            ChatBubble(text = user, isUser = true)
-                        }
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Start
-                        ) {
-                            ChatBubble(text = ai, isUser = false)
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(chatHistory) { (user, ai) ->
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                ChatBubble(text = user, isUser = true)
+                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                ChatBubble(text = ai, isUser = false)
+                            }
                         }
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
 
+            // User Input
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,6 +127,7 @@ fun SymptomCheckerScreen(navController: NavController) {
                     onClick = {
                         if (userInput.text.isNotBlank()) {
                             coroutineScope.launch {
+                                loading = true
                                 val response = try {
                                     val apiKey = "AIzaSyDiILitp4R4MaTzfIdfyeclcs_hSOJIE6o" // Replace with your actual API key
                                     apiService.getMedicalResponse(
@@ -126,6 +140,10 @@ fun SymptomCheckerScreen(navController: NavController) {
                                 chatHistory = chatHistory + (userInput.text to response)
                                 userInput = TextFieldValue("")
                                 keyboardController?.hide()
+                                loading = false
+
+                                // Scroll to the last message
+                                listState.animateScrollToItem(chatHistory.size - 1)
                             }
                         }
                     },
@@ -136,6 +154,25 @@ fun SymptomCheckerScreen(navController: NavController) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LoadingIndicator() {
+    Row(
+        modifier = Modifier
+            .padding(8.dp)
+            .background(Color(0xFFE0E0E0), shape = RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("AI is typing", color = Color.Black)
+        Spacer(modifier = Modifier.width(4.dp))
+        CircularProgressIndicator(
+            modifier = Modifier.size(16.dp),
+            color = Color.Gray,
+            strokeWidth = 2.dp
+        )
     }
 }
 
