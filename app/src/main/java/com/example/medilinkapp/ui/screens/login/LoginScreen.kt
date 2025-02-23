@@ -15,7 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
-import com.example.medilinkapp.ui.viewmodels.LoginViewModel
+import com.example.medilinkapp.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(navController: NavController, viewModel: LoginViewModel = viewModel()) {

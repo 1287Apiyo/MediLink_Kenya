@@ -18,12 +18,19 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 import androidx.compose.foundation.layout.imePadding
+import com.example.medilinkapp.network.AIRequest
+import com.example.medilinkapp.network.Content
+import com.example.medilinkapp.network.MedicalApiService
+import com.example.medilinkapp.network.Part
+import kotlinx.coroutines.launch
 
 @Composable
 fun SymptomCheckerScreen(navController: NavController) {
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
     var chatHistory by remember { mutableStateOf(listOf<Pair<String, String>>()) }
     val keyboardController = LocalSoftwareKeyboardController.current
+    val coroutineScope = rememberCoroutineScope()
+    val apiService = remember { MedicalApiService.create() }
 
     MedilinkAppTheme {
         Column(
@@ -104,12 +111,22 @@ fun SymptomCheckerScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
-                    onClick ={
+                    onClick = {
                         if (userInput.text.isNotBlank()) {
-                            val response = getAISymptomResponse(userInput.text)
-                            chatHistory = chatHistory + (userInput.text to response)
-                            userInput = TextFieldValue("")
-                            keyboardController?.hide()
+                            coroutineScope.launch {
+                                val response = try {
+                                    val apiKey = "AIzaSyDiILitp4R4MaTzfIdfyeclcs_hSOJIE6o" // Replace with your actual API key
+                                    apiService.getMedicalResponse(
+                                        apiKey,
+                                        AIRequest(listOf(Content(listOf(Part(userInput.text)))))
+                                    ).candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "No response"
+                                } catch (e: Exception) {
+                                    "Failed to fetch response. Please try again."
+                                }
+                                chatHistory = chatHistory + (userInput.text to response)
+                                userInput = TextFieldValue("")
+                                keyboardController?.hide()
+                            }
                         }
                     },
                     shape = RoundedCornerShape(50),
@@ -135,13 +152,5 @@ fun ChatBubble(text: String, isUser: Boolean) {
             .padding(12.dp)
     ) {
         Text(text = text, color = if (isUser) Color.White else Color.Black)
-    }
-}
-
-fun getAISymptomResponse(userInput: String): String {
-    return when {
-        "fever" in userInput.lowercase() -> "You may have a fever. Stay hydrated and monitor your temperature."
-        "headache" in userInput.lowercase() -> "Headaches can be caused by stress or dehydration. Try resting and drinking water."
-        else -> "I'm not sure. Please provide more details or consult a doctor."
     }
 }
