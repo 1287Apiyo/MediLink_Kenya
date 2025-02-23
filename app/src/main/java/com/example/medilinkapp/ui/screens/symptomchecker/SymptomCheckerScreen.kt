@@ -85,14 +85,22 @@ fun SymptomCheckerScreen(navController: NavController) {
                             ) {
                                 ChatBubble(text = user, isUser = true)
                             }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                ChatBubble(text = ai, isUser = false)
+                            if (ai.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    ChatBubble(text = ai, isUser = false)
+                                }
                             }
                         }
-                    }
+                    }}}
+            if (loading) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    LoadingIndicator()
                 }
             }
 
@@ -148,10 +156,19 @@ fun SymptomCheckerScreen(navController: NavController) {
                         }
                     },
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-                ) {
-                    Icon(imageVector = Icons.Filled.Send, contentDescription = "Send")
-                }
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) ,
+                    enabled = !loading
+                ){
+                    if (loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(imageVector = Icons.Filled.Send, contentDescription = "Send")
+                    }
+                    }
             }
         }
     }
@@ -166,7 +183,7 @@ fun LoadingIndicator() {
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("AI is typing", color = Color.Black)
+        Text("AI is typing...", color = Color.Black)
         Spacer(modifier = Modifier.width(4.dp))
         CircularProgressIndicator(
             modifier = Modifier.size(16.dp),
@@ -175,6 +192,7 @@ fun LoadingIndicator() {
         )
     }
 }
+
 
 @Composable
 fun ChatBubble(text: String, isUser: Boolean) {
