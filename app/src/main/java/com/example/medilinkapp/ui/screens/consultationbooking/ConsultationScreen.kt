@@ -211,7 +211,8 @@ fun ConsultationHistoryList(navController: NavController) {
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
                     .clickable {
-
+                        // Handle navigation to consultation details
+                        // navController.navigate("consultation_detail_screen")
                     }
             )
             Divider()
