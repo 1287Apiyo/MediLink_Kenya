@@ -188,7 +188,6 @@ fun LoadingIndicator() {
         CircularProgressIndicator(
             modifier = Modifier.size(16.dp),
             color = Color.Gray,
-            strokeWidth = 2.dp
         )
     }
 }
