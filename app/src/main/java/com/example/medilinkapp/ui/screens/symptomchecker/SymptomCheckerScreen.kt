@@ -182,7 +182,7 @@ fun LoadingIndicator() {
             .background(Color(0xFFE0E0E0), shape = RoundedCornerShape(16.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
-    )
+    ) {
         Text("AI is typing...", color = Color.Black)
         Spacer(modifier = Modifier.width(4.dp))
         CircularProgressIndicator(
