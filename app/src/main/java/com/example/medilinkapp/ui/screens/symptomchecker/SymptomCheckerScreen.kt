@@ -196,7 +196,7 @@ fun LoadingIndicator() {
 
 @Composable
 fun ChatBubble(text: String, isUser: Boolean) {
-    Box(
+    Box
         modifier = Modifier
             .fillMaxWidth(0.8f) // Reducing width to 80% for better spacing
             .padding(vertical = 4.dp)
