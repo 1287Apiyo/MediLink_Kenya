@@ -191,11 +191,11 @@ fun LoadingIndicator() {
             strokeWidth = 2.dp
         )
     }
-}
+
 
 
 @Composable
-fun ChatBubble(text: String, isUser: Boolean)
+fun ChatBubble(text: String, isUser: Boolean) {
     Box(
         modifier = Modifier
             .fillMaxWidth(0.8f) // Reducing width to 80% for better spacing
