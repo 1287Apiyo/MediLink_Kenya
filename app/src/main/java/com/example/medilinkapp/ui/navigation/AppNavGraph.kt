@@ -1,5 +1,4 @@
-package com.example.medilinkapp.ui.navigation
-
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHost
 import androidx.navigation.compose.NavHost
@@ -13,16 +12,15 @@ import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(context: Context) { // Pass context
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "dashboard") {
         composable("dashboard") { DashboardScreen(navController) }
         composable("consultation") { ConsultationScreen(navController) }
         composable("appointments") { AppointmentHistoryScreen(navController) }
-        composable("monitoring") { HealthMonitoringScreen(navController) }
+        composable("monitoring") { HealthMonitoringScreen(navController, context) } // Pass context here
         composable("profile") { ProfileScreen(navController) }
         composable("symptom_checker") { SymptomCheckerScreen(navController) }
-
     }
 }
