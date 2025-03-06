@@ -74,7 +74,8 @@ dependencies {
     // Material Design 3
     implementation ("androidx.compose.material3:material3")
 
-    implementation("com.google.android.gms:play-services-auth:20.7.0") // Google Sign-In
+    implementation(libs.play.services.auth) // Google Sign-In
+    //noinspection UseTomlInstead
     implementation("com.google.android.gms:play-services-fitness:21.2.0")
 
 }
