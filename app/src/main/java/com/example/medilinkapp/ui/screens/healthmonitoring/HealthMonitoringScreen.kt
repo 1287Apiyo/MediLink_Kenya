@@ -68,11 +68,10 @@ fun HealthMonitoringScreen(navController: NavController, context: Context) {
         }
     }
 }
-
 fun authorizeGoogleFit(activity: Activity, onResult: (Boolean) -> Unit) {
     val signInOptions = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestEmail()
-        .requestIdToken("YOUR_WEB_CLIENT_ID_HERE") // Add your OAuth 2.0 Web Client ID
+        .requestIdToken("591032813426-2r19507obunchj7en97om43e8ltecqun.apps.googleusercontent.com") // Your OAuth 2.0 Web Client ID
         .requestScopes(
             com.google.android.gms.fitness.Fitness.SCOPE_ACTIVITY_READ,
             com.google.android.gms.fitness.Fitness.SCOPE_NUTRITION_READ
@@ -88,6 +87,7 @@ fun authorizeGoogleFit(activity: Activity, onResult: (Boolean) -> Unit) {
         onResult(true)
     }
 }
+
 
 fun fetchStepCount(activity: Activity, onResult: (Int) -> Unit) {
     val fitnessClient = Fitness.getHistoryClient(activity, GoogleSignIn.getLastSignedInAccount(activity)!!)
