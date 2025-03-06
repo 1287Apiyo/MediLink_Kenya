@@ -28,118 +28,134 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.text.style.TextOverflow
+
 
 @Composable
 fun DashboardScreen(navController: NavController) {
     MedilinkAppTheme {
         Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()) // Enable scrolling
+            LazyColumn( // Use LazyColumn instead of Column
+                modifier = Modifier.fillMaxSize(),
+
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header with Gradient Background
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color(0xFF2196F3), Color.White)
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                item {
+                    // Gradient Header
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp)
+                            .background(Color(0xFFF9FAFC))
+                            .padding(20.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.AccountCircle,
-                            contentDescription = "Profile",
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .padding(4.dp),
-                            tint = Color(0xFF1976D2)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text("Welcome Back, Anne", style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black
-                            ))
-                            Text("Your Health, Our Priority", style = MaterialTheme.typography.bodyMedium)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.3f))
+                                    .padding(4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.AccountCircle,
+                                    contentDescription = "Profile",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    "Welcome Back, Anne",
+                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                )
+                                Text(
+                                    "Your Health, Our Priority",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.White.copy(alpha = 0.8f)
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Quick Action Buttons in a Grid Layout
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text("Quick Access", style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ))
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        QuickActionButton(R.drawable.ic_consultation, "Consultation") { navController.navigate("consultation") }
-                        QuickActionButton(R.drawable.ic_appointments, "Appointments") { navController.navigate("appointments") }
-                        QuickActionButton(R.drawable.ic_health_monitoring, "Monitoring") { navController.navigate("monitoring") }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    Text(
-                        "Featured Services",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+                item {
+                    // Quick Access Section
                     Spacer(modifier = Modifier.height(20.dp))
-
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                            ServiceCard(
-                                imageRes = R.drawable.ai,
-                                title = "AI Symptom Checker",
-                                description = "Instantly assess your symptoms with AI-powered insights.",
-                                modifier = Modifier.weight(1f),
-                                onClick = { navController.navigate("symptom_checker") } // Add navigation action
-                            )
-
-                            ServiceCard(
-                                imageRes = R.drawable.prescriptions,
-                                title = "E-Prescriptions",
-                                description = "Get digital prescriptions from doctors for easy access.",
-                                modifier = Modifier.weight(1f),
-                            )
+                    Text(
+                        "Quick Access",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        QuickActionButton(R.drawable.ic_consultation, "Consultation") {
+                            navController.navigate("consultation")
                         }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                            ServiceCard(
-                                imageRes = R.drawable.pharmacyy,
-                                title = "Pharmacy Services",
-                                description = "Order and receive prescribed medications hassle-free.",
-                                modifier = Modifier.weight(1f)
-                            )
-                            ServiceCard(
-                                imageRes = R.drawable.records, // Add a new drawable for health records
-                                title = "Health Records",
-                                description = "Securely access and manage your health records anytime.",
-                                modifier = Modifier.weight(1f)
-                            )
+                        QuickActionButton(R.drawable.ic_appointments, "Appointments") {
+                            navController.navigate("appointments")
                         }
-
+                        QuickActionButton(R.drawable.ic_health_monitoring, "Monitoring") {
+                            navController.navigate("monitoring")
+                        }
                     }
                 }
 
+                item {
+                    // Featured Services Section
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        Text(
+                            "Featured Services",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
 
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                                ServiceCard(
+                                    imageRes = R.drawable.ai,
+                                    title = "AI Symptom Checker",
+                                    description = "Instantly assess your symptoms with AI-powered insights.",
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { navController.navigate("symptom_checker") }
+                                )
+                                ServiceCard(
+                                    imageRes = R.drawable.prescriptions,
+                                    title = "E-Prescriptions",
+                                    description = "Get digital prescriptions from doctors for easy access.",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                                ServiceCard(
+                                    imageRes = R.drawable.pharmacyy,
+                                    title = "Pharmacy Services",
+                                    description = "Order and receive prescribed medications hassle-free.",
+                                    modifier = Modifier.weight(1f)
+                                )
+                                ServiceCard(
+                                    imageRes = R.drawable.records,
+                                    title = "Health Records",
+                                    description = "Securely access and manage your health records anytime.",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -182,11 +198,11 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold
         )
     }
 }
-
 
 
 @Composable
@@ -195,44 +211,49 @@ fun ServiceCard(
     title: String,
     description: String,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null // Add nullable onClick parameter
+    onClick: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .clickable(onClick != null) { onClick?.invoke() }, // Make card clickable if onClick is provided
+            .height(200.dp) // Slightly taller for better visual presence
+            .clickable(onClick != null) { onClick?.invoke() },
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.elevatedCardElevation(6.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+
+                elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
         Column {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-                contentScale = ContentScale.Crop
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Image(
+                    painter = painterResource(id = imageRes),
+                    contentDescription = title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
                     maxLines = 2,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
 }
-
 
 
 @Composable
