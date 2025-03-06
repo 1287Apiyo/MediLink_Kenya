@@ -44,9 +44,9 @@ fun AppointmentHistoryScreen(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .height(140.dp)
                     .background(MaterialTheme.colorScheme.primary)
-                    .padding(20.dp),
+                    .padding(24.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
@@ -54,12 +54,12 @@ fun AppointmentHistoryScreen(navController: NavController) {
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        fontSize = 24.sp
+                        fontSize = 26.sp
                     )
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Toggle Buttons
             Row(
@@ -70,22 +70,24 @@ fun AppointmentHistoryScreen(navController: NavController) {
                     "Upcoming",
                     modifier = Modifier
                         .clickable { selectedTab = "Upcoming" }
-                        .padding(8.dp),
+                        .padding(12.dp),
                     color = if (selectedTab == "Upcoming") MaterialTheme.colorScheme.primary else Color.Gray,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(32.dp))
                 Text(
                     "Past",
                     modifier = Modifier
                         .clickable { selectedTab = "Past" }
-                        .padding(8.dp),
+                        .padding(12.dp),
                     color = if (selectedTab == "Past") MaterialTheme.colorScheme.primary else Color.Gray,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(if (selectedTab == "Upcoming") upcomingAppointments else pastAppointments) { appointment ->
@@ -101,20 +103,25 @@ fun AppointmentCard(appointment: Appointment) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(12.dp),
+            .padding(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.elevatedCardElevation(6.dp)
+        elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
                 text = appointment.doctorName,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text("Date: ${appointment.date}", style = MaterialTheme.typography.bodyMedium)
-            Text("Time: ${appointment.time}", style = MaterialTheme.typography.bodyMedium)
-            Text("Status: ${appointment.status}", style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.primary))
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(" Date: ${appointment.date}", style = MaterialTheme.typography.bodyMedium)
+            Text(" Time: ${appointment.time}", style = MaterialTheme.typography.bodyMedium)
+            Text(" Status: ${appointment.status}",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            )
         }
     }
 }
