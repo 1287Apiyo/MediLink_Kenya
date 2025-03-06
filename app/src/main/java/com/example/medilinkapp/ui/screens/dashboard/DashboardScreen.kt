@@ -47,7 +47,7 @@ fun DashboardScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
-                            .background(Color(0xFFF9FAFC))
+                            .background(MaterialTheme.colorScheme.primary)
                             .padding(20.dp)
                     ) {
                         Row(
@@ -69,7 +69,7 @@ fun DashboardScreen(navController: NavController) {
                                     modifier = Modifier.size(50.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     "Welcome Back, Anne",
@@ -90,7 +90,7 @@ fun DashboardScreen(navController: NavController) {
 
                 item {
                     // Quick Access Section
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         "Quick Access",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
