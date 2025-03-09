@@ -103,8 +103,7 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: State<Int>) 
             Text(
                 "Health Monitoring",
                 style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color.Black
-                    ,
+                    color = Color.White,
                     fontSize = 26.sp
                 )
             )
