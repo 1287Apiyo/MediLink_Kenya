@@ -84,7 +84,7 @@ class HealthMonitoringActivity : ComponentActivity(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        savePreviousStepCount() // Save step count when the app closes
+        savePreviousStepCount()
     }
 }
 
