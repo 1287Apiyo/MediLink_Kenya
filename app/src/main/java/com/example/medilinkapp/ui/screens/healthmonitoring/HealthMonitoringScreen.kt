@@ -91,7 +91,7 @@ class HealthMonitoringActivity : ComponentActivity(), SensorEventListener {
 @Composable
 fun HealthMonitoringScreen(navController: NavController, stepCount: State<Int>) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header Section
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
