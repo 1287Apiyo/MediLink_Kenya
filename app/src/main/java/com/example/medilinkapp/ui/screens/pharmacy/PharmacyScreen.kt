@@ -1,94 +1,201 @@
 package com.example.medilinkapp.ui.screens.pharmacy
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.medilinkapp.data.Pharmacy
+import com.example.medilinkapp.data.pharmacies
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PharmacyScreen(navController: NavController) {
-    val medications = listOf(
-        Medication("Paracetamol", "Pain relief", "KES 200"),
-        Medication("Amoxicillin", "Antibiotic", "KES 500"),
-        Medication("Cough Syrup", "For cough and flu", "KES 300")
-    )
-
-    var cart by remember { mutableStateOf(mutableListOf<Medication>()) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp)
+            .background(Color(0xFFF5F5F5))
     ) {
-        // Header with cart button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.primary, shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
+        // Header
+        TopAppBar(
+            title = {
                 Text(
-                    text = "Pharmacy Services",
-                    style = MaterialTheme.typography.headlineSmall.copy(color = Color.White, fontSize = 20.sp)
+                    "Pharmacy Services",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
+            },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        LazyColumn(contentPadding = PaddingValues(bottom = 16.dp)) {
+            item {
+                Section(title = " Top Rated Pharmacies") {
+                    PharmacyRow(
+                        pharmacies.filter { it.name in listOf("MYDAWA", "Goodlife Pharmacy", "Portal Pharmacy") }
+                    )
+                }
             }
-            IconButton(onClick = { navController.navigate("cart") }) {
-                Icon(imageVector = Icons.Filled.ShoppingCart, contentDescription = "Cart", tint = Color.White)
+            item {
+                Section(title = " Affordable Pharmacies") {
+                    PharmacyRow(
+                        pharmacies.filter { it.name in listOf("Pharmaplus Pharmacy", "Malibu Pharmacy", "Lifecare Pharmacy") }
+                    )
+                }
+            }
+            item {
+                Section(title = "24/7 Pharmacies") {
+                    PharmacyRow(
+                        pharmacies.filter { it.name in listOf("Aga Khan University Hospital Pharmacy", "Checkups Medical Hub") }
+                    )
+                }
+            }
+            item {
+                Section(title = " Nationwide Pharmacies") {
+                    PharmacyRow(
+                        pharmacies.filter { it.name in listOf("Haltons Pharmacy", "Lifecare Pharmacy") }
+                    )
+                }
             }
         }
+    }
+}
 
-        // Medication List
-        LazyColumn(modifier = Modifier.padding(vertical = 16.dp)) {
-            items(medications) { medication ->
-                MedicationItem(medication, onAddToCart = { cart.add(it) })
-            }
+
+@Composable
+fun Section(title: String, content: @Composable () -> Unit) {
+    Column(modifier = Modifier.padding(start = 16.dp, top = 12.dp)) {
+        Text(
+            title,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+        Divider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            color = Color.Gray,
+            thickness = 2.dp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        content()
+    }
+}
+
+@Composable
+fun PharmacyRow(pharmacyList: List<Pharmacy>) {
+    LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
+        items(pharmacyList) { pharmacy ->
+            PharmacyCard(pharmacy)
         }
     }
 }
 
 @Composable
-fun MedicationItem(medication: Medication, onAddToCart: (Medication) -> Unit) {
-    Card(
+fun PharmacyCard(pharmacy: Pharmacy) {
+    val context = LocalContext.current
+
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(medication.name, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(medication.description, fontSize = 14.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(medication.price, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = { onAddToCart(medication) }) {
-                Text("Add to Cart")
+            .width(200.dp)
+            .height(140.dp)
+            .padding(end = 12.dp)
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pharmacy.website))
+                context.startActivity(intent)
             }
+    ) {
+        // Background Image
+        Image(
+            painter = painterResource(id = com.example.medilinkapp.R.drawable.pharm),
+            contentDescription = "Pharmacy Image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+        // Gradient Overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
+                    )
+                )
+        )
+        // Pharmacy Details
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Text(pharmacy.name, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Visit Website", fontSize = 12.sp, color = Color.White)
         }
     }
 }
 
-data class Medication(val name: String, val description: String, val price: String)
+// ✅ NEW: List of E-Pharmacy Websites
+@Composable
+fun WebsiteList(websites: List<Pair<String, String>>) {
+    val context = LocalContext.current
+
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        websites.forEach { website ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(website.second))
+                        context.startActivity(intent)
+                    },
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(website.first, fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.Black)
+                    Text("Visit", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.Blue)
+                }
+            }
+        }
+    }
+}
