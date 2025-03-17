@@ -1,6 +1,4 @@
-package com.example.medilinkapp.ui.screens.PrescriptionsScreen
-
-
+package com.example.medilinkapp.ui.screens.prescriptions
 
 import android.content.Context
 import android.widget.Toast
@@ -20,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionsScreen(navController: NavController) {
     val context = LocalContext.current
@@ -28,59 +27,74 @@ fun PrescriptionsScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+            .background(Color(0xFFF5F5F5))
     ) {
         // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color(0xFF1976D2), shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "E-Prescriptions",
-                style = MaterialTheme.typography.headlineSmall.copy(color = Color.White, fontSize = 20.sp)
-            )
-        }
+        TopAppBar(
+            title = { Text("E-Prescriptions", fontSize = 22.sp, color = Color.White) },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Prescription List
-        Column(modifier = Modifier.weight(1f)) {
-            prescriptions.forEach { prescription ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .clickable { downloadPrescription(context, prescription) },
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = prescription,
-                        modifier = Modifier.padding(16.dp),
-                        fontSize = 16.sp
-                    )
-                }
-            }
-        }
+        PrescriptionList(prescriptions, context)
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Upload Button
-        Button(
-            onClick = { uploadPrescription(context) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-        ) {
-            Text("Upload New Prescription", color = Color.White)
+        UploadPrescriptionButton(context)
+    }
+}
+
+@Composable
+fun PrescriptionList(prescriptions: List<String>, context: Context) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        prescriptions.forEach { prescription ->
+            PrescriptionCard(prescription, context)
         }
     }
 }
 
+@Composable
+fun PrescriptionCard(prescription: String, context: Context) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable { downloadPrescription(context, prescription) },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Text(
+            text = prescription,
+            modifier = Modifier.padding(16.dp),
+            fontSize = 16.sp
+        )
+    }
+}
+
+@Composable
+fun UploadPrescriptionButton(context: Context) {
+    Button(
+        onClick = { uploadPrescription(context) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(50),
+        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+    ) {
+        Text("Upload New Prescription", color = Color.White)
+    }
+}
+
+// Functions for Toast Messages
 fun uploadPrescription(context: Context) {
     Toast.makeText(context, "Upload feature coming soon!", Toast.LENGTH_SHORT).show()
 }

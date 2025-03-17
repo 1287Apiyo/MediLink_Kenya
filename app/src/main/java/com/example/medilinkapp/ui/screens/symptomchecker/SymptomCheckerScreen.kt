@@ -26,6 +26,8 @@ import com.example.medilinkapp.network.Content
 import com.example.medilinkapp.network.MedicalApiService
 import com.example.medilinkapp.network.Part
 import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SymptomCheckerScreen(navController: NavController) {
     var userInput by remember { mutableStateOf(TextFieldValue("")) }
@@ -40,31 +42,20 @@ fun SymptomCheckerScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
-                .padding(16.dp)
-                .imePadding(),
-            verticalArrangement = Arrangement.SpaceBetween
+                .background(Color(0xFFF5F5F5))
         ) {
             // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF1976D2), shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "AI Symptom Checker",
-                    style = MaterialTheme.typography.headlineSmall.copy(color = Color.White, fontSize = 20.sp)
-                )
-            }
+            TopAppBar(
+                title = { Text("AI Symptom Checker", fontSize = 22.sp, color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
-
             // Chat History
             Box(
                 modifier = Modifier

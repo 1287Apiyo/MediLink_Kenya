@@ -47,7 +47,7 @@ fun DashboardScreen(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
-                            .background(Color.Black)
+                            .background(Color.Blue)
                             .padding(20.dp)
                     ) {
                         Row(
