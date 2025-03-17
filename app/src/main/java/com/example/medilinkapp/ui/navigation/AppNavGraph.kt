@@ -6,10 +6,12 @@ import androidx.navigation.NavHost
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.medilinkapp.ui.screens.PrescriptionsScreen.PrescriptionsScreen
 import com.example.medilinkapp.ui.screens.dashboard.DashboardScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.ConsultationScreen
 import com.example.medilinkapp.ui.screens.appointmenthistory.AppointmentHistoryScreen
 import com.example.medilinkapp.ui.screens.healthmonitoring.HealthMonitoringScreen
+import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
 import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 
@@ -30,6 +32,11 @@ fun AppNavGraph(context: Context) {
 
         composable("profile") { ProfileScreen(navController) }
         composable("symptom_checker") { SymptomCheckerScreen(navController) }
+        composable("prescriptions") { PrescriptionsScreen(navController) }
+        composable("pharmacy") {
+            PharmacyScreen(navController)
+        }
+
     }
 }
 

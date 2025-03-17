@@ -125,29 +125,33 @@ fun DashboardScreen(navController: NavController) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                                 ServiceCard(
-                                    imageRes = R.drawable.ai,
+                                    imageRes = R.drawable.symp,
                                     title = "AI Symptom Checker",
                                     description = "Instantly assess your symptoms with AI-powered insights.",
                                     modifier = Modifier.weight(1f),
                                     onClick = { navController.navigate("symptom_checker") }
                                 )
                                 ServiceCard(
-                                    imageRes = R.drawable.prescriptions,
+                                    imageRes = R.drawable.presc,
                                     title = "E-Prescriptions",
                                     description = "Get digital prescriptions from doctors for easy access.",
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { navController.navigate("prescriptions") } // ✅ Add this line
                                 )
+
                             }
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                                 ServiceCard(
-                                    imageRes = R.drawable.pharmacyy,
+                                    imageRes = R.drawable.pharm,
                                     title = "Pharmacy Services",
                                     description = "Order and receive prescribed medications hassle-free.",
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { navController.navigate("pharmacy") } // Add navigation
                                 )
+
                                 ServiceCard(
-                                    imageRes = R.drawable.records,
+                                    imageRes = R.drawable.rec,
                                     title = "Health Records",
                                     description = "Securely access and manage your health records anytime.",
                                     modifier = Modifier.weight(1f)
