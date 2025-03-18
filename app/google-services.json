@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "407973663893",
+    "project_id": "medi-link-kenya",
+    "storage_bucket": "medi-link-kenya.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:407973663893:android:9f8a7ab6849a6bfcfeb79c",
+        "android_client_info": {
+          "package_name": "com.example.medilinkapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZAjSP-qkovcwSC0T-t9w7q8g6oG85bUo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

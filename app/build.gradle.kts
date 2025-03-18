@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -40,7 +41,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -57,31 +57,33 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-
-    //noinspection UseTomlInstead
+    // Navigation
     implementation("androidx.navigation:navigation-compose:2.8.7")
-
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
-// Retrofit with Scalar Converter
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
-    implementation ("com.squareup.retrofit2:converter-gson:")
-    implementation ("com.squareup.retrofit2:converter-gson:2.3.0")
-
-    implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
     // Material Design 3
-    implementation ("androidx.compose.material3:material3")
-
-    implementation(libs.play.services.auth) // Google Sign-In
-    //noinspection UseTomlInstead
-    implementation("com.google.android.gms:play-services-fitness:21.2.0")
-
     implementation("androidx.compose.material3:material3:1.1.0")
 
-    implementation ("androidx.datastore:datastore-preferences:1.0.0")
+    // Google Sign-In
+    implementation(libs.play.services.auth)
+
+    // Google Fit API
+    implementation("com.google.android.gms:play-services-fitness:21.2.0")
+
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
+    // Material Icons
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
-
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")  // Firestore for doctor data
 }
