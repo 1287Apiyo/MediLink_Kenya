@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun PharmacyScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
-    var favoritePharmacies by remember { mutableStateOf(setOf<String>()) }
     var selectedSort by remember { mutableStateOf("Name") }
+    var favoritePharmacies by remember { mutableStateOf(mutableSetOf<String>()) } // Stores favorites
 
     Column(
         modifier = Modifier
@@ -70,14 +70,6 @@ fun PharmacyScreen(navController: NavController) {
                     )
                 }
             },
-            actions = {
-                IconButton(onClick = { /* Implement filter logic */ }) {
-                    Icon(imageVector = Icons.Filled.FavoriteBorder, contentDescription = "Filter")
-                }
-                IconButton(onClick = { /* Implement sorting logic */ }) {
-                    Icon(imageVector = Icons.Filled.Check, contentDescription = "Sort")
-                }
-            },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
         )
 
@@ -101,6 +93,9 @@ fun PharmacyScreen(navController: NavController) {
         }
 
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+
+
+            // Normal pharmacy categories
             item {
                 Section(title = "Popular & Affordable Pharmacies") {
                     PharmacyRow(
@@ -111,9 +106,10 @@ fun PharmacyScreen(navController: NavController) {
                             )
                         },
                         favoritePharmacies
-                    )
+                    ) { updatedFavorites -> favoritePharmacies = updatedFavorites }
                 }
             }
+
             item {
                 Section(title = "24/7 & Nationwide Pharmacies") {
                     PharmacyRow(
@@ -124,7 +120,18 @@ fun PharmacyScreen(navController: NavController) {
                             )
                         },
                         favoritePharmacies
-                    )
+                    ) { updatedFavorites -> favoritePharmacies = updatedFavorites }
+                }
+            }
+            // Favorites Section - Appears only if there are favorites
+            if (favoritePharmacies.isNotEmpty()) {
+                item {
+                    Section(title = "Your Favorite Pharmacies") {
+                        PharmacyRow(
+                            filteredPharmacies.filter { it.name in favoritePharmacies },
+                            favoritePharmacies
+                        ) { updatedFavorites -> favoritePharmacies = updatedFavorites }
+                    }
                 }
             }
         }
@@ -153,17 +160,19 @@ fun Section(title: String, content: @Composable () -> Unit) {
         content()
     }
 }
+// PharmacyRow now updates the favorite list
 @Composable
-fun PharmacyRow(pharmacyList: List<Pharmacy>, favoritePharmacies: Set<String>) {
+fun PharmacyRow(pharmacyList: List<Pharmacy>, favoritePharmacies: Set<String>, onFavoritesChange: (MutableSet<String>) -> Unit) {
     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
         items(pharmacyList) { pharmacy ->
-            PharmacyCard(pharmacy, favoritePharmacies)
+            PharmacyCard(pharmacy, favoritePharmacies, onFavoritesChange)
         }
     }
 }
 
+// PharmacyCard now updates favoritePharmacies list
 @Composable
-fun PharmacyCard(pharmacy: Pharmacy, favoritePharmacies: Set<String>) {
+fun PharmacyCard(pharmacy: Pharmacy, favoritePharmacies: Set<String>, onFavoritesChange: (MutableSet<String>) -> Unit) {
     val context = LocalContext.current
     var isFavorite by remember { mutableStateOf(pharmacy.name in favoritePharmacies) }
 
@@ -220,11 +229,17 @@ fun PharmacyCard(pharmacy: Pharmacy, favoritePharmacies: Set<String>) {
                 )
             }
             IconButton(
-                onClick = { isFavorite = !isFavorite },
+                onClick = {
+                    isFavorite = !isFavorite
+                    val updatedFavorites = favoritePharmacies.toMutableSet()
+                    if (isFavorite) updatedFavorites.add(pharmacy.name)
+                    else updatedFavorites.remove(pharmacy.name)
+                    onFavoritesChange(updatedFavorites)
+                },
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Favorite,
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = "Favorite",
                     tint = if (isFavorite) Color.Red else Color.White
                 )
@@ -232,5 +247,3 @@ fun PharmacyCard(pharmacy: Pharmacy, favoritePharmacies: Set<String>) {
         }
     }
 }
-
-
