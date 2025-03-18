@@ -43,6 +43,7 @@ fun SymptomCheckerScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF5F5F5))
+                .padding(16.dp)
         ) {
             // Header
             TopAppBar(
@@ -52,7 +53,8 @@ fun SymptomCheckerScreen(navController: NavController) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
+
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -108,19 +110,18 @@ fun SymptomCheckerScreen(navController: NavController) {
                 OutlinedTextField(
                     value = userInput,
                     onValueChange = { userInput = it },
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(Color(0xFF1976D2), shape = RoundedCornerShape(24.dp)),
-                    placeholder = { Text("Describe your symptoms...", color = Color.White) },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Describe your symptoms...") },
                     colors = TextFieldDefaults.colors(
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedContainerColor = Color(0xFF1976D2),
-                        unfocusedContainerColor = Color(0xFF1976D2),
+                        focusedContainerColor = Color(0xFFE3F2FD),
+                        unfocusedContainerColor = Color(0xFFE3F2FD),
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     )
                 )
+
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
                     onClick = {
@@ -146,8 +147,8 @@ fun SymptomCheckerScreen(navController: NavController) {
                             }
                         }
                     },
-                    shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) ,
+                    shape = RoundedCornerShape(10),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A237E)) ,
                     enabled = !loading
                 ){
                     if (loading) {
@@ -174,27 +175,25 @@ fun LoadingIndicator() {
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("AI is typing...", color = Color.Black)
-        Spacer(modifier = Modifier.width(4.dp))
         CircularProgressIndicator(
             modifier = Modifier.size(16.dp),
             color = Color.Gray,
             strokeWidth = 2.dp
         )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("AI is analyzing...", color = Color.Black)
     }
 }
+
 
 
 @Composable
 fun ChatBubble(text: String, isUser: Boolean) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.8f) // Reducing width to 80% for better spacing
+            .fillMaxWidth(0.8f)
             .padding(vertical = 4.dp)
-            .background(
-                if (isUser) Color(0xFF1976D2) else Color(0xFFE0E0E0),
-                shape = RoundedCornerShape(16.dp)
-            )
+            .background(if (isUser) Color(0xFF1A237E) else Color(0xFFE0E0E0), shape = RoundedCornerShape(16.dp))
             .padding(12.dp)
     ) {
         Text(text = text, color = if (isUser) Color.White else Color.Black)

@@ -37,7 +37,8 @@ fun PrescriptionsScreen(navController: NavController) {
                     Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Black)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
+
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -88,7 +89,7 @@ fun UploadPrescriptionButton(context: Context) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
+        colors = ButtonDefaults.buttonColors(containerColor =Color(0xFF1A237E))
     ) {
         Text("Upload New Prescription", color = Color.White)
     }
