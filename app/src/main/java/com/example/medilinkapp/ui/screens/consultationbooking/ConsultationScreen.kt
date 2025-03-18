@@ -111,7 +111,7 @@ fun ConsultationScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            ExtraInfoSection()
+
         }
     }
 }
@@ -172,22 +172,21 @@ fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit)
         }
     }
 }
-
-// ✅ EXTRA INFORMATION SECTION
 @Composable
-fun ExtraInfoSection() {
+fun RegisterAsDoctorSection(navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Why Choose Us?",
+                text = "Are You a Medical Professional?",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 fontFamily = FontFamily.Serif,
@@ -195,11 +194,18 @@ fun ExtraInfoSection() {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "• 24/7 Availability\n• Certified & Experienced Doctors\n• Secure & Private Consultations\n• Affordable Pricing",
+                text = "Join our platform and connect with patients in need of medical advice.",
                 fontSize = 16.sp,
                 fontFamily = FontFamily.Serif,
                 color = Color.DarkGray
             )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { navController.navigate("doctorRegistrationScreen") }, // Navigate to registration
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Register Now", color = Color.White)
+            }
         }
     }
 }
