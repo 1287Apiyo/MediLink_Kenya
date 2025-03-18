@@ -29,26 +29,28 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 
-
+// Custom FontFamily for Times New Roman
+val timesNewRoman = FontFamily.Serif
 @Composable
 fun DashboardScreen(navController: NavController) {
     MedilinkAppTheme {
         Box(modifier = Modifier.fillMaxSize()) {
-            LazyColumn( // Use LazyColumn instead of Column
+            LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    // Gradient Header
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp)
-                            .background(Color(0xFF1A237E)) // Deep Indigo (Mix of Blue & Black)
-
+                            .background(Color(0xFF1A237E))
                             .padding(20.dp)
                     ) {
                         Row(
@@ -74,15 +76,20 @@ fun DashboardScreen(navController: NavController) {
                             Column {
                                 Text(
                                     "Welcome Back, Anne",
-                                    style = MaterialTheme.typography.headlineSmall.copy(
+                                    style = TextStyle(
+                                        fontFamily = timesNewRoman,
                                         fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
                                         color = Color.White
                                     )
                                 )
                                 Text(
                                     "Your Health, Our Priority",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.White.copy(alpha = 0.8f)
+                                    style = TextStyle(
+                                        fontFamily = timesNewRoman,
+                                        fontSize = 16.sp,
+                                        color = Color.White.copy(alpha = 0.8f)
+                                    )
                                 )
                             }
                         }
@@ -94,7 +101,9 @@ fun DashboardScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         "Quick Access",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        fontFamily = timesNewRoman,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -119,9 +128,14 @@ fun DashboardScreen(navController: NavController) {
                     Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                         Text(
                             "Featured Services",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Serif, // Times New Roman
+                                fontWeight = FontWeight.Bold
+                            )
                         )
-                        Spacer(modifier = Modifier.height(20.dp))
+
+
+                    Spacer(modifier = Modifier.height(20.dp))
 
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
@@ -169,6 +183,8 @@ fun DashboardScreen(navController: NavController) {
 
 @Composable
 fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
+    val timesNewRoman = FontFamily.Serif
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -202,12 +218,16 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-            fontWeight = FontWeight.Bold
+            style = TextStyle(
+                fontFamily = timesNewRoman,
+                fontWeight = FontWeight.Bold,
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         )
     }
 }
+
 
 
 @Composable
@@ -221,12 +241,11 @@ fun ServiceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(200.dp) // Slightly taller for better visual presence
+            .height(200.dp)
             .clickable(onClick != null) { onClick?.invoke() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-
-                elevation = CardDefaults.elevatedCardElevation(8.dp)
+        elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth()) {
@@ -243,15 +262,21 @@ fun ServiceCard(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    style = TextStyle(
+                        fontFamily = timesNewRoman,
                         fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+                    style = TextStyle(
+                        fontFamily = timesNewRoman,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    ),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -259,6 +284,7 @@ fun ServiceCard(
         }
     }
 }
+
 
 
 @Composable
