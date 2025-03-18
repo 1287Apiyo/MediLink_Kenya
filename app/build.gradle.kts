@@ -78,4 +78,7 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.google.android.gms:play-services-fitness:21.2.0")
 
+    implementation("androidx.compose.material3:material3:1.1.0")
+
+
 }

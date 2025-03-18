@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,13 +30,20 @@ import com.example.medilinkapp.data.pharmacies
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import com.example.medilinkapp.R
-import androidx.compose.ui.draw.blur
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+
+
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PharmacyScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
+    var favoritePharmacies by remember { mutableStateOf(setOf<String>()) }
+    var selectedSort by remember { mutableStateOf("Name") }
 
     Column(
         modifier = Modifier
@@ -50,7 +58,7 @@ fun PharmacyScreen(navController: NavController) {
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    fontFamily = FontFamily.Serif // Times New Roman font
+                    fontFamily = FontFamily.Serif
                 )
             },
             navigationIcon = {
@@ -60,6 +68,14 @@ fun PharmacyScreen(navController: NavController) {
                         contentDescription = "Back",
                         tint = Color.White
                     )
+                }
+            },
+            actions = {
+                IconButton(onClick = { /* Implement filter logic */ }) {
+                    Icon(imageVector = Icons.Filled.FavoriteBorder, contentDescription = "Filter")
+                }
+                IconButton(onClick = { /* Implement sorting logic */ }) {
+                    Icon(imageVector = Icons.Filled.Check, contentDescription = "Sort")
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
@@ -93,7 +109,8 @@ fun PharmacyScreen(navController: NavController) {
                                 "MYDAWA", "Goodlife Pharmacy", "Portal Pharmacy",
                                 "Pharmaplus Pharmacy", "Malibu Pharmacy", "Lifecare Pharmacy"
                             )
-                        }
+                        },
+                        favoritePharmacies
                     )
                 }
             }
@@ -105,14 +122,14 @@ fun PharmacyScreen(navController: NavController) {
                                 "Aga Khan University Hospital Pharmacy", "Checkups Medical Hub",
                                 "Haltons Pharmacy", "Lifecare Pharmacy"
                             )
-                        }
+                        },
+                        favoritePharmacies
                     )
                 }
             }
         }
     }
 }
-
 @Composable
 fun Section(title: String, content: @Composable () -> Unit) {
     Column(
@@ -136,24 +153,24 @@ fun Section(title: String, content: @Composable () -> Unit) {
         content()
     }
 }
-
 @Composable
-fun PharmacyRow(pharmacyList: List<Pharmacy>) {
+fun PharmacyRow(pharmacyList: List<Pharmacy>, favoritePharmacies: Set<String>) {
     LazyRow(contentPadding = PaddingValues(horizontal = 16.dp)) {
         items(pharmacyList) { pharmacy ->
-            PharmacyCard(pharmacy)
+            PharmacyCard(pharmacy, favoritePharmacies)
         }
     }
 }
 
 @Composable
-fun PharmacyCard(pharmacy: Pharmacy) {
+fun PharmacyCard(pharmacy: Pharmacy, favoritePharmacies: Set<String>) {
     val context = LocalContext.current
+    var isFavorite by remember { mutableStateOf(pharmacy.name in favoritePharmacies) }
 
     Card(
         modifier = Modifier
             .width(220.dp)
-            .height(220.dp) // Increased height
+            .height(220.dp)
             .padding(end = 16.dp)
             .clickable {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pharmacy.website))
@@ -166,9 +183,7 @@ fun PharmacyCard(pharmacy: Pharmacy) {
             Image(
                 painter = painterResource(id = pharmacy.imageResId),
                 contentDescription = "Pharmacy Image",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(2.5.dp), // Added blur effect
+                modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
             Box(
@@ -194,17 +209,28 @@ fun PharmacyCard(pharmacy: Pharmacy) {
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    fontFamily = FontFamily.Serif // Times New Roman font
+                    fontFamily = FontFamily.Serif
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     "Visit Website",
                     fontSize = 14.sp,
                     color = Color.White,
-                    fontFamily = FontFamily.Serif // Times New Roman font
+                    fontFamily = FontFamily.Serif
+                )
+            }
+            IconButton(
+                onClick = { isFavorite = !isFavorite },
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) Color.Red else Color.White
                 )
             }
         }
     }
 }
+
 
