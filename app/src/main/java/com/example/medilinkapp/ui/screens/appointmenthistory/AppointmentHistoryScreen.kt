@@ -182,7 +182,6 @@ fun AppointmentHistoryScreen(navController: NavController) {
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditableAppointmentCard(
@@ -191,10 +190,9 @@ fun EditableAppointmentCard(
     onUpdate: (Appointment) -> Unit,
     onStartCall: () -> Unit
 ) {
-    // Determine if the appointment is about to start.
+    // Assume appointment.timestamp is the scheduled time in milliseconds.
     val currentTime = System.currentTimeMillis()
-    // 15 minutes threshold (15 * 60 * 1000 = 900000 ms)
-    val threshold = 900000L
+    val threshold = 900000L // 15 minutes threshold
     val isStartingSoon = currentTime in (appointment.timestamp - threshold)..(appointment.timestamp + threshold)
 
     var showEditSheet by remember { mutableStateOf(false) }
@@ -237,38 +235,42 @@ fun EditableAppointmentCard(
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // If appointment is about to start, show "Start Video Call" button.
-            if (isStartingSoon) {
-                Button(
-                    onClick = onStartCall,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                ) {
-                    Text("Start Video Call", fontFamily = FontFamily.Serif)
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-            // Action row: Edit and Delete buttons.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { showEditSheet = true }) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit Appointment",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                // Left side: "Start Video Call" button (only visible if appointment is starting soon).
+                if (isStartingSoon) {
+                    Button(
+                        onClick = onStartCall,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Start Video Call", fontFamily = FontFamily.Serif)
+                    }
+                } else {
+                    // If not starting soon, add a spacer so that right side icons remain aligned.
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete Appointment",
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                // Right side: Edit and Delete icons.
+                Row {
+                    IconButton(onClick = { showEditSheet = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit Appointment",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = "Delete Appointment",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
@@ -289,6 +291,7 @@ fun EditableAppointmentCard(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
