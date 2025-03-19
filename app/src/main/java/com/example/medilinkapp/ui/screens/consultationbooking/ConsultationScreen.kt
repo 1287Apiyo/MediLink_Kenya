@@ -3,12 +3,16 @@ package com.example.medilinkapp.ui.screens.consultationbooking
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.VideoCall
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,11 +36,20 @@ import kotlinx.coroutines.launch
 fun ConsultationScreen(navController: NavController) {
     val repository = FirestoreRepository()
     var doctors by remember { mutableStateOf(emptyList<Doctor>()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         coroutineScope.launch {
-            doctors = repository.getDoctors()
+            try {
+                doctors = repository.getDoctors()
+                error = null
+            } catch (e: Exception) {
+                error = e.message
+            } finally {
+                isLoading = false
+            }
         }
     }
 
@@ -69,7 +82,6 @@ fun ConsultationScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -92,17 +104,35 @@ fun ConsultationScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (doctors.isEmpty()) {
+            if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Loading doctors...", style = TextStyle(fontSize = 14.sp, color = Color.Gray))
+                    }
+                }
+            } else if (error != null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error: $error", style = TextStyle(fontSize = 14.sp, color = Color.Red))
+                }
+            } else if (doctors.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No doctors available.", style = TextStyle(fontSize = 14.sp, color = Color.Gray))
                 }
             } else {
-                Column {
-                    doctors.forEach { doctor ->
+                LazyColumn {
+                    items(doctors) { doctor ->
                         SmallDoctorCard(
                             doctor,
-                            onVideoCall = { /* TODO: Handle Video Call */ },
-                            onChat = { /* TODO: Handle Chat */ }
+                            onVideoCall = {
+                                // Navigate to VideoCallScreen with the doctor's name as parameter
+                                navController.navigate("videoCallScreen/${doctor.name}")
+                            },
+                            onChat = {
+                                // Navigate to ChatScreen with the doctor's name as parameter
+                                navController.navigate("chatScreen/${doctor.name}")
+                            }
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                     }
@@ -115,13 +145,13 @@ fun ConsultationScreen(navController: NavController) {
         }
     }
 }
-// ✅ IMPROVED SMALLER DOCTOR CARD
+
 @Composable
 fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp)) // ✅ Reduced roundness
+            .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onVideoCall() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -134,10 +164,10 @@ fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit)
         ) {
             Image(
                 painter = painterResource(id = doctor.drawableId),
-                contentDescription = doctor.name,
+                contentDescription = "Doctor ${doctor.name}",
                 modifier = Modifier
-                    .size(80.dp)  // ✅ Smaller Image
-                    .clip(RoundedCornerShape(12.dp)), // ✅ Less round
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
 
@@ -163,15 +193,25 @@ fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit)
 
             Column {
                 IconButton(onClick = onVideoCall) {
-                    Icon(Icons.Outlined.VideoCall, contentDescription = "Video Call", tint = MaterialTheme.colorScheme.primary)
+                    Icon(
+                        Icons.Outlined.VideoCall,
+                        contentDescription = "Video Call",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
                 IconButton(onClick = onChat) {
-                    Icon(Icons.Outlined.Chat, contentDescription = "Chat", tint = MaterialTheme.colorScheme.secondary)
+                    Icon(
+                        Icons.Outlined.Chat,
+                        contentDescription = "Chat",
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
                 }
             }
         }
     }
 }
+
+
 @Composable
 fun RegisterAsDoctorSection(navController: NavController) {
     Card(
@@ -201,7 +241,7 @@ fun RegisterAsDoctorSection(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(12.dp))
             Button(
-                onClick = { navController.navigate("doctorRegistrationScreen") }, // Navigate to registration
+                onClick = { navController.navigate("doctorRegistrationScreen") },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Text("Register Now", color = Color.White)

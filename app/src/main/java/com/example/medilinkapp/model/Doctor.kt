@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import com.example.medilinkapp.R
 
 data class Doctor(
+
     val name: String = "",
     val specialization: String = "",
     val experience: String = "",
