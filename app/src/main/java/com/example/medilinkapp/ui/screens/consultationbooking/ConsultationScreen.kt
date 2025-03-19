@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.VideoCall
@@ -28,7 +27,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.model.Doctor
 import com.example.medilinkapp.repository.FirestoreRepository
@@ -86,14 +84,8 @@ fun ConsultationScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        // Force icon tint using LocalContentColor if needed.
-                        androidx.compose.runtime.CompositionLocalProvider(
-                            LocalContentColor provides MaterialTheme.colorScheme.onPrimary
-                        ) {
-                            Icon(
-                                Icons.Filled.ArrowBack,
-                                contentDescription = "Back"
-                            )
+                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onPrimary) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
                         }
                     }
                 },
@@ -103,7 +95,7 @@ fun ConsultationScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        // Wrap content in a Box that uses a white background.
+        // Main container with a pure white background.
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -193,8 +185,9 @@ fun ConsultationScreen(navController: NavController) {
                                         onChat = {
                                             navController.navigate("chatScreen/${doctor.name}")
                                         },
-                                        onInfo = {
-                                            navController.navigate("doctorProfileScreen/${doctor.name}")
+                                        onBookAppointment = {
+                                            // Navigate to the appointment booking screen
+                                            navController.navigate("appointmentBookingScreen/${doctor.name}")
                                         }
                                     )
                                 }
@@ -213,7 +206,7 @@ fun SmallDoctorCard(
     doctor: Doctor,
     onVideoCall: () -> Unit,
     onChat: () -> Unit,
-    onInfo: () -> Unit
+    onBookAppointment: () -> Unit
 ) {
     // Dummy values for rating and availability; replace with real data if available.
     val rating = 4.5f
@@ -313,11 +306,22 @@ fun SmallDoctorCard(
                         tint = MaterialTheme.colorScheme.secondary
                     )
                 }
-                IconButton(onClick = onInfo) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = "Info",
-                        tint = MaterialTheme.colorScheme.primary
+                // Updated Book Appointment Button:
+                Button(
+                    onClick = onBookAppointment,
+                    shape = RoundedCornerShape(4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Book Appointment",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
