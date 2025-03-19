@@ -13,17 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.unit.toSize
 import androidx.navigation.NavController
-
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +32,16 @@ fun AppointmentBookingScreen(navController: NavController, doctorName: String) {
     var bookingMessage by remember { mutableStateOf("") }
 
     val context = LocalContext.current
+
+    // If the booking message indicates success, wait 2 seconds and navigate back to the Dashboard.
+    if (bookingMessage.startsWith("Appointment booked successfully!")) {
+        LaunchedEffect(bookingMessage) {
+            delay(2000)
+            navController.navigate("dashboard") {
+                popUpTo("dashboard") { inclusive = true }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -61,7 +67,7 @@ fun AppointmentBookingScreen(navController: NavController, doctorName: String) {
             )
         }
     ) { paddingValues ->
-        // Wrapping content in a vertical scroll so that keyboard does not hide content.
+        // Wrapping content in a vertical scroll so that the keyboard does not hide content.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,7 +75,7 @@ fun AppointmentBookingScreen(navController: NavController, doctorName: String) {
                 .padding(paddingValues)
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
-                .imePadding(), // Ensures space for IME (keyboard)
+                .imePadding(), // Ensures space for the keyboard
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -80,8 +86,9 @@ fun AppointmentBookingScreen(navController: NavController, doctorName: String) {
                 label = { Text("Appointment Date (dd/MM/yyyy)", fontFamily = FontFamily.Serif) },
                 placeholder = { Text("e.g., 25/12/2025", fontFamily = FontFamily.Serif) },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
+
             Spacer(modifier = Modifier.height(16.dp))
             // Appointment Time Input
             OutlinedTextField(
@@ -90,8 +97,9 @@ fun AppointmentBookingScreen(navController: NavController, doctorName: String) {
                 label = { Text("Appointment Time (HH:mm)", fontFamily = FontFamily.Serif) },
                 placeholder = { Text("e.g., 14:30", fontFamily = FontFamily.Serif) },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
+
             Spacer(modifier = Modifier.height(16.dp))
             // Optional Notes Input
             OutlinedTextField(
@@ -141,7 +149,7 @@ fun AppointmentBookingScreen(navController: NavController, doctorName: String) {
                 Text(
                     text = bookingMessage,
                     fontFamily = FontFamily.Serif,
-                    color = if (bookingMessage.startsWith("Error")) MaterialTheme.colorScheme.error else Color.Green,
+                    color = if (bookingMessage.startsWith("Error")) MaterialTheme.colorScheme.error else Color(0xFF4CAF50),
                     fontSize = 16.sp
                 )
             }
