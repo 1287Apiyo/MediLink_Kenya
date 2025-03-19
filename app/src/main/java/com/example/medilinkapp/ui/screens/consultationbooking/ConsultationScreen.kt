@@ -9,9 +9,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.VideoCall
 import androidx.compose.material3.*
@@ -19,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -41,12 +45,11 @@ fun ConsultationScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    // Function to fetch doctors
     fun loadDoctors() {
         coroutineScope.launch {
             try {
                 doctors = repository.getDoctors()
-                filteredDoctors = doctors // Initially, all doctors are visible
+                filteredDoctors = doctors
                 error = null
             } catch (e: Exception) {
                 error = e.message
@@ -56,12 +59,10 @@ fun ConsultationScreen(navController: NavController) {
         }
     }
 
-    // Fetch doctors on first composition or when retrying
     LaunchedEffect(Unit) {
         loadDoctors()
     }
 
-    // Filter doctors based on search query
     LaunchedEffect(searchQuery, doctors) {
         filteredDoctors = if (searchQuery.isBlank()) {
             doctors
@@ -177,12 +178,14 @@ fun ConsultationScreen(navController: NavController) {
                                 SmallDoctorCard(
                                     doctor = doctor,
                                     onVideoCall = {
-                                        // Navigate to VideoCallScreen with the doctor's name as parameter
                                         navController.navigate("videoCallScreen/${doctor.name}")
                                     },
                                     onChat = {
-                                        // Navigate to ChatScreen with the doctor's name as parameter
                                         navController.navigate("chatScreen/${doctor.name}")
+                                    },
+                                    onInfo = {
+                                        // Navigate to a detailed profile screen (needs implementation)
+                                        navController.navigate("doctorProfileScreen/${doctor.name}")
                                     }
                                 )
                             }
@@ -196,7 +199,16 @@ fun ConsultationScreen(navController: NavController) {
 }
 
 @Composable
-fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit) {
+fun SmallDoctorCard(
+    doctor: Doctor,
+    onVideoCall: () -> Unit,
+    onChat: () -> Unit,
+    onInfo: () -> Unit
+) {
+    // Dummy values for rating and availability; replace with real data if available.
+    val rating = 4.5f
+    val isAvailable = true
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -247,6 +259,33 @@ fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit)
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                // Rating and Availability Row
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Star,
+                        contentDescription = "Rating",
+                        tint = Color(0xFFFFC107), // Amber color for star
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(2.dp))
+                    Text(
+                        text = rating.toString(),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(if (isAvailable) Color.Green else Color.Red)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (isAvailable) "Available" else "Busy",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(12.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -262,6 +301,13 @@ fun SmallDoctorCard(doctor: Doctor, onVideoCall: () -> Unit, onChat: () -> Unit)
                         imageVector = Icons.Outlined.Chat,
                         contentDescription = "Chat",
                         tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
+                IconButton(onClick = onInfo) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Info",
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
