@@ -49,7 +49,8 @@ fun VideoCallScreen(navController: NavController, doctorName: String) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = Color.White
                         )
                     }
                 },
@@ -230,15 +231,15 @@ fun ChatScreen(navController: NavController, doctorName: String) {
                         Text(
                             "Type your message...",
                             fontFamily = FontFamily.Serif,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                            color = Color.Black
                         )
                     },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         fontFamily = FontFamily.Serif,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.Black
                     ),
                     colors = TextFieldDefaults.textFieldColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                     )
                 )
 
