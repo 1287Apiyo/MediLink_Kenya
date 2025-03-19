@@ -86,11 +86,15 @@ fun ConsultationScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                        // Force icon tint using LocalContentColor if needed.
+                        androidx.compose.runtime.CompositionLocalProvider(
+                            LocalContentColor provides MaterialTheme.colorScheme.onPrimary
+                        ) {
+                            Icon(
+                                Icons.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -99,101 +103,107 @@ fun ConsultationScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        Column(
+        // Wrap content in a Box that uses a white background.
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .background(Color.White)
                 .padding(paddingValues)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                "Get expert medical advice anytime, anywhere.",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontFamily = FontFamily.Serif
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Get expert medical advice anytime, anywhere.",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontFamily = FontFamily.Serif
+                    )
                 )
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            // Search Bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search doctors") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "Available Doctors",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Serif,
-                    color = MaterialTheme.colorScheme.secondary
+                Spacer(modifier = Modifier.height(16.dp))
+                // Search Bar
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = { Text("Search doctors", fontFamily = FontFamily.Serif) },
+                    modifier = Modifier.fillMaxWidth()
                 )
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            when {
-                isLoading -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Loading doctors...", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                }
-                error != null -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                "Error: $error",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = {
-                                isLoading = true
-                                loadDoctors()
-                            }) {
-                                Text("Retry")
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Available Doctors",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Serif,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                when {
+                    isLoading -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Loading doctors...", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
-                }
-                filteredDoctors.isEmpty() -> {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No doctors available.", style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(filteredDoctors) { doctor ->
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn(animationSpec = tween(durationMillis = 500))
-                            ) {
-                                SmallDoctorCard(
-                                    doctor = doctor,
-                                    onVideoCall = {
-                                        navController.navigate("videoCallScreen/${doctor.name}")
-                                    },
-                                    onChat = {
-                                        navController.navigate("chatScreen/${doctor.name}")
-                                    },
-                                    onInfo = {
-                                        // Navigate to a detailed profile screen (needs implementation)
-                                        navController.navigate("doctorProfileScreen/${doctor.name}")
-                                    }
+                    error != null -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    "Error: $error",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
                                 )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(onClick = {
+                                    isLoading = true
+                                    loadDoctors()
+                                }) {
+                                    Text("Retry")
+                                }
+                            }
+                        }
+                    }
+                    filteredDoctors.isEmpty() -> {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("No doctors available.", style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(filteredDoctors) { doctor ->
+                                AnimatedVisibility(
+                                    visible = true,
+                                    enter = fadeIn(animationSpec = tween(durationMillis = 500))
+                                ) {
+                                    SmallDoctorCard(
+                                        doctor = doctor,
+                                        onVideoCall = {
+                                            navController.navigate("videoCallScreen/${doctor.name}")
+                                        },
+                                        onChat = {
+                                            navController.navigate("chatScreen/${doctor.name}")
+                                        },
+                                        onInfo = {
+                                            navController.navigate("doctorProfileScreen/${doctor.name}")
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(24.dp))
             }
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
@@ -212,7 +222,7 @@ fun SmallDoctorCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable { onVideoCall() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -265,7 +275,7 @@ fun SmallDoctorCard(
                     Icon(
                         imageVector = Icons.Filled.Star,
                         contentDescription = "Rating",
-                        tint = Color(0xFFFFC107), // Amber color for star
+                        tint = Color(0xFFFFC107),
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
