@@ -21,10 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.CameraPermissionWrapper
 import com.example.medilinkapp.ui.components.CameraPreviewView
+import com.example.medilinkapp.ui.components.RecordingIndicator
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoCallScreen(navController: NavController, doctorName: String) {
+    // States for mute and camera toggle (simulate call controls)
     var isMuted by remember { mutableStateOf(false) }
     var isCameraOn by remember { mutableStateOf(true) }
 
@@ -61,6 +63,7 @@ fun VideoCallScreen(navController: NavController, doctorName: String) {
                     )
                 }
                 IconButton(onClick = {
+                    // End the call (simulate by navigating back)
                     navController.popBackStack()
                 }) {
                     Icon(
@@ -91,9 +94,20 @@ fun VideoCallScreen(navController: NavController, doctorName: String) {
                     style = MaterialTheme.typography.headlineMedium
                 )
             }
+            // Display the recording indicator if audio is active (not muted)
+            if (!isMuted) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                ) {
+                    RecordingIndicator()
+                }
+            }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
