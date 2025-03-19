@@ -17,6 +17,7 @@ import com.example.medilinkapp.ui.screens.healthmonitoring.HealthMonitoringScree
 import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
 import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
+import com.example.medilinkapp.ui.screens.consultationbooking.AppointmentBookingScreen
 
 @Composable
 fun AppNavGraph(context: Context) {
@@ -52,6 +53,17 @@ fun AppNavGraph(context: Context) {
             arguments = listOf(navArgument("doctorName") { type = NavType.StringType })
         ) { backStackEntry ->
             ChatScreen(
+                navController = navController,
+                doctorName = backStackEntry.arguments?.getString("doctorName") ?: ""
+            )
+        }
+
+        // New route for Appointment Booking Screen
+        composable(
+            route = "appointmentBookingScreen/{doctorName}",
+            arguments = listOf(navArgument("doctorName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            AppointmentBookingScreen(
                 navController = navController,
                 doctorName = backStackEntry.arguments?.getString("doctorName") ?: ""
             )
