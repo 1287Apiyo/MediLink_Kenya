@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +35,7 @@ fun AppointmentHistoryScreen(navController: NavController) {
     var error by remember { mutableStateOf<String?>(null) }
     var listenerRegistration by remember { mutableStateOf<ListenerRegistration?>(null) }
 
-    // Listen to appointments collection in Firestore
+    // Listen to appointments collection in Firestore.
     LaunchedEffect(Unit) {
         listenerRegistration = firestore.collection("appointments")
             .orderBy("timestamp")
@@ -46,7 +47,6 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 }
                 snapshot?.let {
                     val list = it.documents.mapNotNull { doc ->
-                        // Map the document to Appointment and include the document ID.
                         doc.toObject(Appointment::class.java)?.copy(id = doc.id)
                     }
                     appointments = list
@@ -59,11 +59,11 @@ fun AppointmentHistoryScreen(navController: NavController) {
         onDispose { listenerRegistration?.remove() }
     }
 
-    // Group appointments by status
+    // Group appointments by status.
     val upcomingAppointments = appointments.filter { it.status == "upcoming" }
     val pastAppointments = appointments.filter { it.status == "past" }
 
-    // Tab state: 0 for Upcoming, 1 for Past
+    // Tab state: 0 for Upcoming, 1 for Past.
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Upcoming", "Past")
 
@@ -93,7 +93,7 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 .background(Color.White)
                 .padding(paddingValues)
         ) {
-            // Tab row to toggle between Upcoming and Past
+            // Tab row to toggle between Upcoming and Past.
             TabRow(selectedTabIndex = selectedTab) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -130,7 +130,6 @@ fun AppointmentHistoryScreen(navController: NavController) {
                                             }
                                         },
                                         onUpdate = { updatedAppointment ->
-                                            // Update the appointment in Firestore.
                                             updatedAppointment.id?.let { id ->
                                                 firestore.collection("appointments").document(id)
                                                     .update(
@@ -141,6 +140,10 @@ fun AppointmentHistoryScreen(navController: NavController) {
                                                         )
                                                     )
                                             }
+                                        },
+                                        onStartCall = {
+                                            // Navigate to the VideoCallScreen passing the doctorName.
+                                            navController.navigate("videoCallScreen/${appointment.doctorName}")
                                         }
                                     )
                                 }
@@ -164,7 +167,6 @@ fun AppointmentHistoryScreen(navController: NavController) {
                                     visible = true,
                                     enter = fadeIn(animationSpec = tween(durationMillis = 500))
                                 ) {
-                                    // For past appointments, editing may be disabled.
                                     CompactAppointmentCard(appointment = appointment, onDelete = {
                                         appointment.id?.let { id ->
                                             firestore.collection("appointments").document(id)
@@ -186,17 +188,23 @@ fun AppointmentHistoryScreen(navController: NavController) {
 fun EditableAppointmentCard(
     appointment: Appointment,
     onDelete: () -> Unit,
-    onUpdate: (Appointment) -> Unit
+    onUpdate: (Appointment) -> Unit,
+    onStartCall: () -> Unit
 ) {
+    // Determine if the appointment is about to start.
+    val currentTime = System.currentTimeMillis()
+    // 15 minutes threshold (15 * 60 * 1000 = 900000 ms)
+    val threshold = 900000L
+    val isStartingSoon = currentTime in (appointment.timestamp - threshold)..(appointment.timestamp + threshold)
+
     var showEditSheet by remember { mutableStateOf(false) }
 
-    // Use a custom card design for upcoming appointments
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { showEditSheet = true },
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(4.dp),  // Less rounded corners
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
@@ -229,6 +237,21 @@ fun EditableAppointmentCard(
                 style = MaterialTheme.typography.bodySmall
             )
             Spacer(modifier = Modifier.height(8.dp))
+            // If appointment is about to start, show "Start Video Call" button.
+            if (isStartingSoon) {
+                Button(
+                    onClick = onStartCall,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text("Start Video Call", fontFamily = FontFamily.Serif)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            // Action row: Edit and Delete buttons.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -335,7 +358,7 @@ fun CompactAppointmentCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(4.dp), // Less rounded corners
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
