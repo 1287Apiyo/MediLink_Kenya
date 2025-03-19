@@ -32,10 +32,9 @@ fun CameraPreviewView(modifier: Modifier = Modifier) {
             // Create a PreviewView to display the camera feed
             val previewView = PreviewView(ctx).apply {
                 scaleType = PreviewView.ScaleType.FILL_CENTER
-                // Sometimes switching to the compatible implementation helps.
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                // Switch to PERFORMANCE mode (try PERFORMANCE if COMPATIBLE is not showing preview)
+                implementationMode = PreviewView.ImplementationMode.PERFORMANCE
             }
-
             // Obtain the camera provider
             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener({
@@ -48,10 +47,10 @@ fun CameraPreviewView(modifier: Modifier = Modifier) {
                         setSurfaceProvider(previewView.surfaceProvider)
                     }
 
-                    // Use the back camera (if front camera is needed, switch to DEFAULT_FRONT_CAMERA)
+                    // Use the back camera
                     val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-                    // Unbind previous use cases before binding new ones
+                    // Unbind any existing use cases before binding the new one
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview)
                     Log.d("CameraPreview", "Camera use case bound successfully.")
@@ -59,7 +58,6 @@ fun CameraPreviewView(modifier: Modifier = Modifier) {
                     Log.e("CameraPreview", "Use case binding failed", exc)
                 }
             }, ContextCompat.getMainExecutor(ctx))
-
             previewView
         }
     )
