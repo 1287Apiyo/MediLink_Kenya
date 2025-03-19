@@ -21,10 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -142,7 +142,12 @@ fun AppointmentHistoryScreen(navController: NavController) {
                                             }
                                         },
                                         onStartCall = {
-                                            // Navigate to the VideoCallScreen passing the doctorName.
+                                            // Instead of deleting, update status to "past"
+                                            appointment.id?.let { id ->
+                                                firestore.collection("appointments").document(id)
+                                                    .update("status", "past")
+                                            }
+                                            // Navigate to VideoCallScreen.
                                             navController.navigate("videoCallScreen/${appointment.doctorName}")
                                         }
                                     )
@@ -167,12 +172,21 @@ fun AppointmentHistoryScreen(navController: NavController) {
                                     visible = true,
                                     enter = fadeIn(animationSpec = tween(durationMillis = 500))
                                 ) {
-                                    CompactAppointmentCard(appointment = appointment, onDelete = {
-                                        appointment.id?.let { id ->
-                                            firestore.collection("appointments").document(id)
-                                                .delete()
+                                    // Updated compact card with a "Rebook & Call" button.
+                                    CompactAppointmentCard(
+                                        appointment = appointment,
+                                        onDelete = {
+                                            appointment.id?.let { id ->
+                                                firestore.collection("appointments").document(id)
+                                                    .delete()
+                                            }
+                                        },
+                                        onRebook = {
+                                            // Optionally update the appointment (or create a new one) to set it as upcoming.
+                                            // For simplicity, we navigate directly to VideoCallScreen.
+                                            navController.navigate("videoCallScreen/${appointment.doctorName}")
                                         }
-                                    })
+                                    )
                                 }
                             }
                         }
@@ -182,6 +196,7 @@ fun AppointmentHistoryScreen(navController: NavController) {
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditableAppointmentCard(
@@ -190,11 +205,12 @@ fun EditableAppointmentCard(
     onUpdate: (Appointment) -> Unit,
     onStartCall: () -> Unit
 ) {
-    // Assume appointment.timestamp is the scheduled time in milliseconds.
+    // Use appointment.timestamp (in milliseconds) to determine if it is starting soon.
     val currentTime = System.currentTimeMillis()
     val threshold = 900000L // 15 minutes threshold
     val isStartingSoon = currentTime in (appointment.timestamp - threshold)..(appointment.timestamp + threshold)
 
+    var callStarted by remember { mutableStateOf(false) }
     var showEditSheet by remember { mutableStateOf(false) }
 
     Card(
@@ -240,19 +256,32 @@ fun EditableAppointmentCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left side: "Start Video Call" button (only visible if appointment is starting soon).
+                // Left side: "Start Video Call" button if starting soon.
                 if (isStartingSoon) {
                     Button(
-                        onClick = onStartCall,
+                        onClick = {
+                            if (!callStarted) {
+                                callStarted = true
+                                onStartCall()
+                            }
+                        },
+                        enabled = !callStarted,
+                        modifier = Modifier
+                            .width(120.dp)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(0.dp), // Square button
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
+                            containerColor = if (callStarted) Color.Gray else MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Text("Start Video Call", fontFamily = FontFamily.Serif)
+                        Text(
+                            text = if (callStarted) "Call Started" else "Start Video Call",
+                            fontFamily = FontFamily.Serif,
+                            fontSize = 12.sp
+                        )
                     }
                 } else {
-                    // If not starting soon, add a spacer so that right side icons remain aligned.
                     Spacer(modifier = Modifier.width(8.dp))
                 }
                 // Right side: Edit and Delete icons.
@@ -291,7 +320,6 @@ fun EditableAppointmentCard(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -357,7 +385,8 @@ fun EditAppointmentSheet(
 @Composable
 fun CompactAppointmentCard(
     appointment: Appointment,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onRebook: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -397,8 +426,22 @@ fun CompactAppointmentCard(
             Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Button(
+                    onClick = onRebook,
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(0.dp), // Square button
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text("Rebook & Call", fontFamily = FontFamily.Serif, fontSize = 12.sp)
+                }
+                Spacer(modifier = Modifier.weight(1f))
                 IconButton(onClick = onDelete) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
@@ -407,6 +450,7 @@ fun CompactAppointmentCard(
                     )
                 }
             }
+
         }
     }
 }

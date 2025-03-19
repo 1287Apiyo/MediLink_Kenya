@@ -48,7 +48,7 @@ fun CameraPreviewView(modifier: Modifier = Modifier) {
                     }
 
                     // Use the back camera
-                    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                    val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 
                     // Unbind any existing use cases before binding the new one
                     cameraProvider.unbindAll()
