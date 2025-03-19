@@ -3,6 +3,8 @@ package com.example.medilinkapp.ui.screens.healthmonitoring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -21,17 +23,51 @@ import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.StepCounterSensor
 import kotlin.math.roundToInt
 
+// Utility function to compute sleep hours given start and end times in "HH:mm" format.
+fun computeSleepHours(start: String, end: String): Float {
+    val (startH, startM) = start.split(":").map { it.toIntOrNull() ?: 0 }
+    val (endH, endM) = end.split(":").map { it.toIntOrNull() ?: 0 }
+    val startMinutes = startH * 60 + startM
+    val endMinutes = endH * 60 + endM
+    val diffMinutes = if (endMinutes >= startMinutes) {
+        endMinutes - startMinutes
+    } else {
+        (24 * 60 - startMinutes) + endMinutes
+    }
+    return diffMinutes / 60f
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState<Int>) {
-    // Get real step count from sensor.
+    // Update step count from real sensor.
     StepCounterSensor(stepCount = stepCount)
 
-    // Sample data for the line chart: For example, we generate a list using the current stepCount for day 7.
-    val sampleStepData = listOf(4000, 6500, 8000, 7500, 9000, 8500, stepCount.value)
-    // Static metrics for demonstration.
-    val heartRate = 72  // BPM.
-    val sleepHours = 7.5f
+    // Mutable states for manual input of heart rate and sleep times.
+    var userHeartRate by remember { mutableStateOf("") }
+    var sleepStart by remember { mutableStateOf("") }   // e.g., "23:00"
+    var sleepEnd by remember { mutableStateOf("") }     // e.g., "07:00"
+    var computedSleepHours by remember { mutableStateOf(0f) }
+
+    // Simulate daily step data for the past 7 days.
+    val dailyStepData = remember {
+        mutableStateListOf(
+            "Mon" to 4000,
+            "Tue" to 6500,
+            "Wed" to 8000,
+            "Thu" to 7500,
+            "Fri" to 9000,
+            "Sat" to 8500,
+            "Sun" to stepCount.value  // Today's steps.
+        )
+    }
+    LaunchedEffect(stepCount.value) {
+        dailyStepData[dailyStepData.size - 1] = "Sun" to stepCount.value
+    }
+
+    // Static sample metrics for demonstration (manual heart rate and computed sleep).
+    // In a real app, these might be updated by sensors or health APIs.
+    val heartRate = if (userHeartRate.isNotBlank()) userHeartRate.toIntOrNull() ?: 0 else 0
 
     Scaffold(
         topBar = {
@@ -58,20 +94,37 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
             )
         }
     ) { paddingValues ->
-        // Main content with white background.
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .background(Color.White)
                 .padding(paddingValues)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Health Data Input Section.
+            HealthDataInputSection(
+                userHeartRate = userHeartRate,
+                onHeartRateChange = { userHeartRate = it },
+                sleepStart = sleepStart,
+                onSleepStartChange = { sleepStart = it },
+                sleepEnd = sleepEnd,
+                onSleepEndChange = { sleepEnd = it },
+                onCalculateSleep = {
+                    computedSleepHours = computeSleepHours(sleepStart, sleepEnd)
+                    // Clear the input fields after calculation.
+                    userHeartRate = ""
+                    sleepStart = ""
+                    sleepEnd = ""
+                }
+            )
+            // Display metrics.
             HealthMetricsSection(
                 steps = stepCount.value,
                 heartRate = heartRate,
-                sleepHours = sleepHours
+                sleepHours = computedSleepHours
             )
             Text(
                 text = "Weekly Step Count",
@@ -79,8 +132,59 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            StepsLineChart(stepData = sampleStepData)
-            // Remove manual update button when using a real sensor.
+            // Smooth line chart.
+            SmoothStepsLineChart(stepData = dailyStepData.map { it.second })
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HealthDataInputSection(
+    userHeartRate: String,
+    onHeartRateChange: (String) -> Unit,
+    sleepStart: String,
+    onSleepStartChange: (String) -> Unit,
+    sleepEnd: String,
+    onSleepEndChange: (String) -> Unit,
+    onCalculateSleep: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Enter Health Data",
+            fontFamily = FontFamily.Serif,
+            style = MaterialTheme.typography.titleMedium
+        )
+        OutlinedTextField(
+            value = userHeartRate,
+            onValueChange = onHeartRateChange,
+            label = { Text("Heart Rate (BPM)", fontFamily = FontFamily.Serif) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = sleepStart,
+            onValueChange = onSleepStartChange,
+            label = { Text("Sleep Start Time (HH:mm)", fontFamily = FontFamily.Serif) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        OutlinedTextField(
+            value = sleepEnd,
+            onValueChange = onSleepEndChange,
+            label = { Text("Wake Up Time (HH:mm)", fontFamily = FontFamily.Serif) },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Button(
+            onClick = onCalculateSleep,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Text("Calculate Sleep Hours", fontFamily = FontFamily.Serif)
         }
     }
 }
@@ -106,7 +210,7 @@ fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
         )
         MetricCard(
             label = "Sleep",
-            value = sleepHours.toString(),
+            value = String.format("%.1f", sleepHours),
             unit = "hrs",
             iconColor = Color.Blue
         )
@@ -119,9 +223,7 @@ fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
         modifier = Modifier.size(width = 100.dp, height = 100.dp),
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
@@ -146,25 +248,19 @@ fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
 }
 
 @Composable
-fun StepsLineChart(stepData: List<Int>) {
+fun SmoothStepsLineChart(stepData: List<Int>) {
     val primaryColor = MaterialTheme.colorScheme.primary
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(220.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().height(220.dp)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasWidth = size.width
             val canvasHeight = size.height
             val maxSteps = (stepData.maxOrNull() ?: 0).toFloat()
             if (maxSteps == 0f) return@Canvas
 
-            // Draw horizontal grid lines.
             val gridLineCount = 5
-            val gridLineSpacing = canvasHeight / gridLineCount
+            val gridSpacing = canvasHeight / gridLineCount
             for (i in 0..gridLineCount) {
-                val y = i * gridLineSpacing
+                val y = i * gridSpacing
                 drawLine(
                     color = Color.LightGray,
                     start = Offset(0f, y),
@@ -174,12 +270,23 @@ fun StepsLineChart(stepData: List<Int>) {
             }
 
             val pointSpacing = canvasWidth / (stepData.size - 1)
+            val points = stepData.mapIndexed { index, value ->
+                Offset(x = index * pointSpacing, y = canvasHeight - (value / maxSteps * canvasHeight))
+            }
+
             val path = Path().apply {
-                moveTo(0f, canvasHeight - (stepData[0] / maxSteps * canvasHeight))
-                stepData.forEachIndexed { index, steps ->
-                    val x = index * pointSpacing
-                    val y = canvasHeight - (steps / maxSteps * canvasHeight)
-                    if (index == 0) moveTo(x, y) else lineTo(x, y)
+                if (points.isNotEmpty()) {
+                    moveTo(points.first().x, points.first().y)
+                    for (i in 0 until points.size - 1) {
+                        val p0 = points[i]
+                        val p1 = points[i + 1]
+                        val midX = (p0.x + p1.x) / 2
+                        cubicTo(
+                            x1 = midX, y1 = p0.y,
+                            x2 = midX, y2 = p1.y,
+                            x3 = p1.x, y3 = p1.y
+                        )
+                    }
                 }
             }
 
@@ -189,13 +296,27 @@ fun StepsLineChart(stepData: List<Int>) {
                 style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
             )
 
-            stepData.forEachIndexed { index, steps ->
-                val x = index * pointSpacing
-                val y = canvasHeight - (steps / maxSteps * canvasHeight)
+            points.forEach { point ->
                 drawCircle(
                     color = primaryColor,
                     radius = 6.dp.toPx(),
-                    center = Offset(x, y)
+                    center = point
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
+                Text(
+                    text = day,
+                    fontFamily = FontFamily.Serif,
+                    fontSize = 10.sp,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
