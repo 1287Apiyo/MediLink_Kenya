@@ -18,25 +18,18 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import kotlinx.coroutines.delay
-import kotlin.random.Random
+import com.example.medilinkapp.ui.components.StepCounterSensor
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState<Int>) {
-    // Simulate automatic updates to stepCount every 2 seconds.
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(2000L)
-            // Simulate a random step increment between 100 and 500.
-            stepCount.value += Random.nextInt(100, 500)
-        }
-    }
+    // Get real step count from sensor.
+    StepCounterSensor(stepCount = stepCount)
 
-    // Sample data for the line chart: steps for the past 7 days.
-    // For simplicity, we use fixed sample values for days 1-6 and the current stepCount for day 7.
+    // Sample data for the line chart: For example, we generate a list using the current stepCount for day 7.
     val sampleStepData = listOf(4000, 6500, 8000, 7500, 9000, 8500, stepCount.value)
-    // Sample static metrics.
+    // Static metrics for demonstration.
     val heartRate = 72  // BPM.
     val sleepHours = 7.5f
 
@@ -65,7 +58,7 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
             )
         }
     ) { paddingValues ->
-        // Main content.
+        // Main content with white background.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -87,14 +80,13 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
                 color = MaterialTheme.colorScheme.onBackground
             )
             StepsLineChart(stepData = sampleStepData)
-            // No manual update button, as step count updates automatically.
+            // Remove manual update button when using a real sensor.
         }
     }
 }
 
 @Composable
 fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
-    // Display basic health metrics in a row.
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
@@ -155,13 +147,12 @@ fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
 
 @Composable
 fun StepsLineChart(stepData: List<Int>) {
-    // Capture the primary color outside the Canvas lambda.
     val primaryColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp) // Slightly taller for grid lines.
+            .height(220.dp)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasWidth = size.width
@@ -182,31 +173,22 @@ fun StepsLineChart(stepData: List<Int>) {
                 )
             }
 
-            // Calculate spacing between data points.
             val pointSpacing = canvasWidth / (stepData.size - 1)
-
-            // Create a path for the line chart.
             val path = Path().apply {
                 moveTo(0f, canvasHeight - (stepData[0] / maxSteps * canvasHeight))
                 stepData.forEachIndexed { index, steps ->
                     val x = index * pointSpacing
                     val y = canvasHeight - (steps / maxSteps * canvasHeight)
-                    if (index == 0) {
-                        moveTo(x, y)
-                    } else {
-                        lineTo(x, y)
-                    }
+                    if (index == 0) moveTo(x, y) else lineTo(x, y)
                 }
             }
 
-            // Draw the line chart path.
             drawPath(
                 path = path,
                 color = primaryColor,
                 style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
             )
 
-            // Draw circles at each data point.
             stepData.forEachIndexed { index, steps ->
                 val x = index * pointSpacing
                 val y = canvasHeight - (steps / maxSteps * canvasHeight)
