@@ -1,118 +1,221 @@
 package com.example.medilinkapp.ui.screens.healthmonitoring
 
-import android.app.Activity
-import android.content.Context
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import android.os.Bundle
-import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
-class HealthMonitoringActivity : ComponentActivity(), SensorEventListener {
-
-    private lateinit var sensorManager: SensorManager
-    private var stepSensor: Sensor? = null
-    private var totalSteps = 0f
-    private var previousTotalSteps = 0f
-    private var _stepCount = mutableStateOf(0) // Step count
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Initialize sensors
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
-
-        // Load previous total steps to calculate actual steps taken today
-        previousTotalSteps = loadPreviousStepCount()
-
-        setContent {
-            HealthMonitoringScreen(navController = rememberNavController(), stepCount = _stepCount)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState<Int>) {
+    // Simulate automatic updates to stepCount every 2 seconds.
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(2000L)
+            // Simulate a random step increment between 100 and 500.
+            stepCount.value += Random.nextInt(100, 500)
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        stepSensor?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
-        } ?: Log.e("StepTracker", "Step Counter Sensor not available!")
-    }
+    // Sample data for the line chart: steps for the past 7 days.
+    // For simplicity, we use fixed sample values for days 1-6 and the current stepCount for day 7.
+    val sampleStepData = listOf(4000, 6500, 8000, 7500, 9000, 8500, stepCount.value)
+    // Sample static metrics.
+    val heartRate = 72  // BPM.
+    val sleepHours = 7.5f
 
-    override fun onPause() {
-        super.onPause()
-        sensorManager.unregisterListener(this)
-    }
-
-    override fun onSensorChanged(event: SensorEvent?) {
-        if (event?.sensor?.type == Sensor.TYPE_STEP_COUNTER) {
-            totalSteps = event.values[0]
-            _stepCount.value = (totalSteps - previousTotalSteps).toInt() // Subtract initial steps
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Health Monitoring",
+                        fontFamily = FontFamily.Serif,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            )
         }
-    }
-
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        // Not needed for step counter
-    }
-
-    // Load previous step count (so that step count resets properly)
-    private fun loadPreviousStepCount(): Float {
-        val sharedPreferences = getSharedPreferences("stepCounter", Context.MODE_PRIVATE)
-        return sharedPreferences.getFloat("previousTotalSteps", 0f)
-    }
-
-    // Save current step count when the app is closed (optional)
-    private fun savePreviousStepCount() {
-        val sharedPreferences = getSharedPreferences("stepCounter", Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
-        editor.putFloat("previousTotalSteps", totalSteps)
-        editor.apply()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        savePreviousStepCount()
+    ) { paddingValues ->
+        // Main content.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(paddingValues)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            HealthMetricsSection(
+                steps = stepCount.value,
+                heartRate = heartRate,
+                sleepHours = sleepHours
+            )
+            Text(
+                text = "Weekly Step Count",
+                fontFamily = FontFamily.Serif,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            StepsLineChart(stepData = sampleStepData)
+            // No manual update button, as step count updates automatically.
+        }
     }
 }
 
 @Composable
-fun HealthMonitoringScreen(navController: NavController, stepCount: State<Int>) {
-    Column(modifier = Modifier.fillMaxSize()) {
+fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
+    // Display basic health metrics in a row.
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        MetricCard(
+            label = "Steps",
+            value = steps.toString(),
+            unit = "",
+            iconColor = Color(0xFF4CAF50)
+        )
+        MetricCard(
+            label = "Heart Rate",
+            value = heartRate.toString(),
+            unit = "BPM",
+            iconColor = Color.Red
+        )
+        MetricCard(
+            label = "Sleep",
+            value = sleepHours.toString(),
+            unit = "hrs",
+            iconColor = Color.Blue
+        )
+    }
+}
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .background(MaterialTheme.colorScheme.primary)
-                .padding(24.dp),
-            contentAlignment = Alignment.CenterStart
+@Composable
+fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
+    Card(
+        modifier = Modifier.size(width = 100.dp, height = 100.dp),
+        shape = RoundedCornerShape(8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Health Monitoring",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color.White,
-                    fontSize = 26.sp
-                )
+                text = "$value $unit",
+                fontFamily = FontFamily.Serif,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                fontFamily = FontFamily.Serif,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Spacer(modifier = Modifier.height(24.dp))
+    }
+}
 
-        // Display Health Data
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Step Count: ${stepCount.value}", fontSize = 18.sp)
+@Composable
+fun StepsLineChart(stepData: List<Int>) {
+    // Capture the primary color outside the Canvas lambda.
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(220.dp) // Slightly taller for grid lines.
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val canvasWidth = size.width
+            val canvasHeight = size.height
+            val maxSteps = (stepData.maxOrNull() ?: 0).toFloat()
+            if (maxSteps == 0f) return@Canvas
+
+            // Draw horizontal grid lines.
+            val gridLineCount = 5
+            val gridLineSpacing = canvasHeight / gridLineCount
+            for (i in 0..gridLineCount) {
+                val y = i * gridLineSpacing
+                drawLine(
+                    color = Color.LightGray,
+                    start = Offset(0f, y),
+                    end = Offset(canvasWidth, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+            }
+
+            // Calculate spacing between data points.
+            val pointSpacing = canvasWidth / (stepData.size - 1)
+
+            // Create a path for the line chart.
+            val path = Path().apply {
+                moveTo(0f, canvasHeight - (stepData[0] / maxSteps * canvasHeight))
+                stepData.forEachIndexed { index, steps ->
+                    val x = index * pointSpacing
+                    val y = canvasHeight - (steps / maxSteps * canvasHeight)
+                    if (index == 0) {
+                        moveTo(x, y)
+                    } else {
+                        lineTo(x, y)
+                    }
+                }
+            }
+
+            // Draw the line chart path.
+            drawPath(
+                path = path,
+                color = primaryColor,
+                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+            )
+
+            // Draw circles at each data point.
+            stepData.forEachIndexed { index, steps ->
+                val x = index * pointSpacing
+                val y = canvasHeight - (steps / maxSteps * canvasHeight)
+                drawCircle(
+                    color = primaryColor,
+                    radius = 6.dp.toPx(),
+                    center = Offset(x, y)
+                )
+            }
         }
     }
 }
