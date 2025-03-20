@@ -86,7 +86,10 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
+    // Firebase Authentication
+    implementation ("com.google.firebase:firebase-auth-ktx:22.0.0")
     implementation("com.google.firebase:firebase-firestore")  // Firestore for doctor data
+
 
     // CameraX dependencies
     implementation ("androidx.camera:camera-camera2:1.2.0")

@@ -1,4 +1,4 @@
-package com.example.medilinkapp.ui.screens.login
+package com.example.medilinkapp.ui.screens.signup
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,8 +13,7 @@ import androidx.navigation.NavController
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 
 @Composable
-fun LoginScreen(navController: NavController) {
-    // Dummy state for email and password
+fun SignupScreen(navController: NavController) {
     val email = remember { mutableStateOf("") }
     val password = remember { mutableStateOf("") }
 
@@ -33,7 +32,7 @@ fun LoginScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Login", style = MaterialTheme.typography.headlineMedium)
+                    Text("Sign Up", style = MaterialTheme.typography.headlineMedium)
                     Spacer(modifier = Modifier.height(32.dp))
                     TextField(
                         value = email.value,
@@ -52,18 +51,18 @@ fun LoginScreen(navController: NavController) {
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = {
-                            // For now, simulate successful login by navigating to dashboard
+                            // Simulate successful sign up and navigate to dashboard
                             navController.navigate("dashboard")
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Login")
+                        Text("Sign Up")
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Don't have an account? Sign Up",
+                        text = "Already have an account? Login",
                         color = Color.Blue,
-                        modifier = Modifier.clickable { navController.navigate("signup") }
+                        modifier = Modifier.clickable { navController.navigate("login") }
                     )
                 }
             }

@@ -200,7 +200,7 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
                 // Solid white background for a clean glass look
                 .background(Color.White)
                 // A light border for a defined edge
-                .border(width = 1.dp, color = Color.LightGray, shape = CircleShape)
+                .border(width = 1.dp, color = Color.Black, shape = CircleShape)
                 // Circular ripple effect on click
                 .clickable(
                     interactionSource = interactionSource,
