@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,9 +21,12 @@ import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavController) {
-    // Dummy state for various input fields
+    // Dummy state for input fields
     val fullName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
+    val phone = remember { mutableStateOf("") }
+    val dob = remember { mutableStateOf("") }  // Date of Birth as MM/DD/YYYY
+    val gender = remember { mutableStateOf("") } // Could be "Male", "Female", etc.
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
 
@@ -42,14 +46,14 @@ fun SignupScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Distinct title using Times New Roman (Serif) style
+                    // Title
                     Text(
                         text = "Create Account",
                         style = TextStyle(
                             fontFamily = FontFamily.Serif,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 32.sp,
                             color = Color.Black
                         )
@@ -59,12 +63,7 @@ fun SignupScreen(navController: NavController) {
                     OutlinedTextField(
                         value = fullName.value,
                         onValueChange = { fullName.value = it },
-                        label = {
-                            Text(
-                                "Full Name",
-                                style = TextStyle(fontFamily = FontFamily.Serif)
-                            )
-                        },
+                        label = { Text("Full Name", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -79,12 +78,52 @@ fun SignupScreen(navController: NavController) {
                     OutlinedTextField(
                         value = email.value,
                         onValueChange = { email.value = it },
-                        label = {
-                            Text(
-                                "Email",
-                                style = TextStyle(fontFamily = FontFamily.Serif)
-                            )
-                        },
+                        label = { Text("Email", style = TextStyle(fontFamily = FontFamily.Serif)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = Color.Black
+                        )
+                    )
+
+                    // Phone Number Field
+                    OutlinedTextField(
+                        value = phone.value,
+                        onValueChange = { phone.value = it },
+                        label = { Text("Phone Number", style = TextStyle(fontFamily = FontFamily.Serif)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = Color.Black
+                        )
+                    )
+
+                    // Date of Birth Field
+                    OutlinedTextField(
+                        value = dob.value,
+                        onValueChange = { dob.value = it },
+                        label = { Text("Date of Birth (MM/DD/YYYY)", style = TextStyle(fontFamily = FontFamily.Serif)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White,
+                            focusedBorderColor = Color.Gray,
+                            unfocusedBorderColor = Color.LightGray,
+                            cursorColor = Color.Black
+                        )
+                    )
+
+                    // Gender Field
+                    OutlinedTextField(
+                        value = gender.value,
+                        onValueChange = { gender.value = it },
+                        label = { Text("Gender", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -99,12 +138,7 @@ fun SignupScreen(navController: NavController) {
                     OutlinedTextField(
                         value = password.value,
                         onValueChange = { password.value = it },
-                        label = {
-                            Text(
-                                "Password",
-                                style = TextStyle(fontFamily = FontFamily.Serif)
-                            )
-                        },
+                        label = { Text("Password", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
@@ -120,12 +154,7 @@ fun SignupScreen(navController: NavController) {
                     OutlinedTextField(
                         value = confirmPassword.value,
                         onValueChange = { confirmPassword.value = it },
-                        label = {
-                            Text(
-                                "Confirm Password",
-                                style = TextStyle(fontFamily = FontFamily.Serif)
-                            )
-                        },
+                        label = { Text("Confirm Password", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
@@ -139,10 +168,7 @@ fun SignupScreen(navController: NavController) {
 
                     // Primary Sign Up Button
                     Button(
-                        onClick = {
-                            // For now, simulate successful signup by navigating to dashboard
-                            navController.navigate("dashboard")
-                        },
+                        onClick = { navController.navigate("dashboard") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = buttonColors(containerColor = MaterialTheme.colorScheme.primary)
@@ -151,7 +177,7 @@ fun SignupScreen(navController: NavController) {
                             text = "Sign Up",
                             style = TextStyle(
                                 fontFamily = FontFamily.Serif,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp,
                                 color = Color.White
                             )
@@ -168,7 +194,7 @@ fun SignupScreen(navController: NavController) {
                             text = "Already have an account? Login",
                             style = TextStyle(
                                 fontFamily = FontFamily.Serif,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp,
                                 color = Color.Black
                             )
