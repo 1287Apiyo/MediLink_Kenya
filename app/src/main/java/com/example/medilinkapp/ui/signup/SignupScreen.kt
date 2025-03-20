@@ -2,6 +2,8 @@ package com.example.medilinkapp.ui.screens.signup
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -26,7 +28,7 @@ fun SignupScreen(navController: NavController) {
     val email = remember { mutableStateOf("") }
     val phone = remember { mutableStateOf("") }
     val dob = remember { mutableStateOf("") }  // Date of Birth as MM/DD/YYYY
-    val gender = remember { mutableStateOf("") } // Could be "Male", "Female", etc.
+    val gender = remember { mutableStateOf("") } // e.g., "Male", "Female", etc.
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
 
@@ -39,14 +41,16 @@ fun SignupScreen(navController: NavController) {
                     .fillMaxSize()
                     .background(Color.White)
                     .padding(paddingValues),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.TopCenter
             ) {
+                // Make the column scrollable if content overflows
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 32.dp),
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 32.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Title
                     Text(

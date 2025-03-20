@@ -173,8 +173,10 @@ fun DashboardScreen(navController: NavController) {
                                     imageRes = R.drawable.rec,
                                     title = "Health Records",
                                     description = "Securely access and manage your health records anytime.",
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { navController.navigate("health_records") }
                                 )
+
                             }
                         }
                     }
