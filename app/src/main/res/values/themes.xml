@@ -1,5 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <style name="Theme.MedilinkApp" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Default splash screen -->
+    <style name="Theme.MedilinkApp.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="postSplashScreenTheme">@style/Theme.MedilinkApp</item>
+    </style>
+
 </resources>

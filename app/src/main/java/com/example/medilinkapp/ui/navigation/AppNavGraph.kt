@@ -10,31 +10,29 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.medilinkapp.ui.screens.dashboard.DashboardScreen
+import com.example.medilinkapp.ui.screens.consultationbooking.AppointmentBookingScreen
+import com.example.medilinkapp.ui.screens.consultationbooking.ChatScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.ConsultationScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.VideoCallScreen
-import com.example.medilinkapp.ui.screens.consultationbooking.ChatScreen
 import com.example.medilinkapp.ui.screens.appointmenthistory.AppointmentHistoryScreen
 import com.example.medilinkapp.ui.screens.healthmonitoring.HealthMonitoringScreen
-import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
-import com.example.medilinkapp.ui.screens.profile.ProfileScreen
-import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
-import com.example.medilinkapp.ui.screens.prescriptions.PrescriptionsScreen
-import com.example.medilinkapp.ui.screens.consultationbooking.AppointmentBookingScreen
 import com.example.medilinkapp.ui.screens.login.LoginScreen
+import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
+import com.example.medilinkapp.ui.screens.prescriptions.PrescriptionsScreen
+import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.signup.SignupScreen
-import com.example.medilinkapp.ui.screens.splashscreen.SplashScreen
+import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
+import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
 
 @Composable
 fun AppNavGraph(context: Context) {
     val navController = rememberNavController()
-    // Example state for HealthMonitoringScreen
+    // State for HealthMonitoringScreen (if needed)
     val stepCount = remember { mutableStateOf(0) }
 
-    NavHost(navController = navController, startDestination = "splash") {
-        // Splash route - after timeout, navigate to login
-        composable("splash") {
-            SplashScreen(onTimeout = { navController.navigate("login") })
-        }
+    NavHost(navController = navController, startDestination = "welcome") {
+        // Welcome screen
+        composable("welcome") { WelcomeScreen(navController) }
         // Authentication routes
         composable("login") { LoginScreen(navController) }
         composable("signup") { SignupScreen(navController) }

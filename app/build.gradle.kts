@@ -98,4 +98,7 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-permissions:0.30.1")
     implementation ("androidx.datastore:datastore-preferences:1.0.0")
 
+    // Other dependencies...
+    implementation ("androidx.core:core-splashscreen:1.0.0")
+
 }
