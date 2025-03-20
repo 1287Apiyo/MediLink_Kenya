@@ -1,6 +1,7 @@
 package com.example.medilinkapp.ui.screens.dashboard
 
 import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +30,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -111,13 +115,13 @@ fun DashboardScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        QuickActionButton(R.drawable.ic_consultation, "Consultation") {
+                        QuickActionButton(R.drawable.consultation, "Consultation") {
                             navController.navigate("consultation")
                         }
-                        QuickActionButton(R.drawable.ic_appointments, "Appointments") {
+                        QuickActionButton(R.drawable.appointment, "Appointments") {
                             navController.navigate("appointments")
                         }
-                        QuickActionButton(R.drawable.ic_health_monitoring, "Monitoring") {
+                        QuickActionButton(R.drawable.healthmon, "Monitoring") {
                             navController.navigate("monitoring")
                         }
                     }
@@ -180,37 +184,58 @@ fun DashboardScreen(navController: NavController) {
     }
 }
 
-
 @Composable
 fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
-    val timesNewRoman = FontFamily.Serif
+    val interactionSource = remember { MutableInteractionSource() }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(12.dp)
+        modifier = Modifier.padding(12.dp)
     ) {
         Box(
             modifier = Modifier
+                .shadow(elevation = 8.dp, shape = CircleShape, clip = false)
                 .size(64.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onPrimary) // Soft background
+                // Solid white background for a clean glass look
+                .background(Color.White)
+                // A light border for a defined edge
+                .border(width = 1.dp, color = Color.LightGray, shape = CircleShape)
+                // Circular ripple effect on click
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = rememberRipple(bounded = true, radius = 32.dp, color = Color.LightGray)
+                ) { onClick() }
                 .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {
+            // Subtle glossy overlay for a glass-like finish
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.7f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+            )
+            // Icon placed on top
             when (icon) {
                 is ImageVector -> Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = MaterialTheme.colorScheme.onPrimary,
+                    tint = Color.Black,
                     modifier = Modifier.size(32.dp)
                 )
                 is Int -> Icon(
                     painter = painterResource(id = icon),
                     contentDescription = label,
                     modifier = Modifier.size(32.dp),
-                    tint = Color.Unspecified // Keeps original colors
+                    tint = Color.Unspecified
                 )
                 else -> throw IllegalArgumentException("Unsupported icon type")
             }
