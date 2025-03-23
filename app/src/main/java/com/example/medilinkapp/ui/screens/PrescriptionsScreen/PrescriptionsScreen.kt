@@ -164,24 +164,31 @@ fun PrescriptionCard(prescription: Prescription) {
                 text = "Medications: ${prescription.medications.joinToString(", ")}",
                 style = MaterialTheme.typography.bodyMedium
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            // Actions row with Download and Share buttons
+            // Add a spacer to bring the buttons a bit closer to the content
+            Spacer(modifier = Modifier.height(16.dp))
+            // Row for action buttons, centered horizontally and vertically
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = {
-                    // TODO: Add your download logic here
-                }) {
+                IconButton(
+                    onClick = {
+                        // TODO: Implement download logic here
+                    }
+                ) {
                     Icon(
                         imageVector = Icons.Filled.FileDownload,
                         contentDescription = "Download Prescription",
                         tint = Color(0xFF1A237E)
                     )
                 }
-                IconButton(onClick = {
-                    // TODO: Add your share logic here
-                }) {
+                Spacer(modifier = Modifier.width(16.dp))
+                IconButton(
+                    onClick = {
+                        // TODO: Implement share logic here
+                    }
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Share,
                         contentDescription = "Share Prescription",
