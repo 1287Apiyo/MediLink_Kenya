@@ -22,6 +22,8 @@ import androidx.navigation.NavController
 import com.example.medilinkapp.model.Prescription
 import com.example.medilinkapp.repository.FirestoreRepository
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Share
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -135,12 +137,13 @@ fun PrescriptionsScreen(navController: NavController) {
     }
 }
 
+
+
 @Composable
 fun PrescriptionCard(prescription: Prescription) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium),
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -161,6 +164,31 @@ fun PrescriptionCard(prescription: Prescription) {
                 text = "Medications: ${prescription.medications.joinToString(", ")}",
                 style = MaterialTheme.typography.bodyMedium
             )
+            Spacer(modifier = Modifier.height(12.dp))
+            // Actions row with Download and Share buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = {
+                    // TODO: Add your download logic here
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.FileDownload,
+                        contentDescription = "Download Prescription",
+                        tint = Color(0xFF1A237E)
+                    )
+                }
+                IconButton(onClick = {
+                    // TODO: Add your share logic here
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Share,
+                        contentDescription = "Share Prescription",
+                        tint = Color(0xFF1A237E)
+                    )
+                }
+            }
         }
     }
 }
