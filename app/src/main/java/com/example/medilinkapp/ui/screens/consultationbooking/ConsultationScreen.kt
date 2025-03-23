@@ -311,7 +311,7 @@ fun SmallDoctorCard(
                     onClick = onBookAppointment,
                     shape = RoundedCornerShape(4.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 1.0f),
                         contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
