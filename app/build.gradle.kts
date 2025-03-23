@@ -58,7 +58,7 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     // Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.7")
+    implementation("androidx.navigation:navigation-compose:2.8.9")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -100,5 +100,8 @@ dependencies {
 
     // Other dependencies...
     implementation ("androidx.core:core-splashscreen:1.0.0")
+
+
+
 
 }
