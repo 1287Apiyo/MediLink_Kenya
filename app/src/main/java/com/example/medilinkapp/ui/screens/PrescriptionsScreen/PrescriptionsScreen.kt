@@ -1,6 +1,8 @@
 package com.example.medilinkapp.ui.screens.prescriptions
 
+import android.content.Context
 import android.content.Intent
+import android.os.Environment
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -31,6 +33,7 @@ import androidx.navigation.NavController
 import com.example.medilinkapp.model.Prescription
 import com.example.medilinkapp.repository.FirestoreRepository
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -175,103 +178,124 @@ fun PrescriptionsScreen(navController: NavController) {
 @Composable
 fun PrescriptionCard(prescription: Prescription) {
     val context = LocalContext.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp), // reduced rounding for a cleaner look
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp), // lower elevation
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        // A Box to add a horizontal gradient background overlay
-        Box(
-            modifier = Modifier
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFFE3F2FD), Color(0xFFBBDEFB))
-                    )
+        Column(modifier = Modifier.padding(12.dp)) {
+            // Header: Medical Icon and Doctor's Name
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.MedicalServices,
+                    contentDescription = "Prescription Icon",
+                    tint = Color(0xFF1A237E),
+                    modifier = Modifier.size(28.dp)
                 )
-                .padding(16.dp)
-        ) {
-            Column {
-                // Top Row: Icon and Prescription Title
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.MedicalServices,
-                        contentDescription = "Prescription Icon",
-                        tint = Color(0xFF1A237E),
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Prescription from Dr. ${prescription.doctorName}",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontFamily = FontFamily.Serif,
-                            fontSize = 20.sp
-                        ),
-                        color = Color(0xFF1A237E)
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                // Row: Date on left, download and share buttons on right
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Date: ${prescription.date}",
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Serif),
-                        color = Color.Gray
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    IconButton(
-                        onClick = {
-                            Toast.makeText(context, "Downloading prescription...", Toast.LENGTH_SHORT).show()
-                            // TODO: Implement actual download functionality
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.FileDownload,
-                            contentDescription = "Download Prescription",
-                            tint = Color(0xFF1A237E)
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            val shareIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "Prescription from Dr. ${prescription.doctorName}\n" +
-                                            "Date: ${prescription.date}\n" +
-                                            "Medications: ${prescription.medications.joinToString(", ")}"
-                                )
-                                type = "text/plain"
-                            }
-                            context.startActivity(Intent.createChooser(shareIntent, "Share Prescription via"))
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Share,
-                            contentDescription = "Share Prescription",
-                            tint = Color(0xFF1A237E)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                // Medications details
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Medications: ${prescription.medications.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    text = "Precriptions from  ${prescription.doctorName}",
+                    style = MaterialTheme.typography.titleLarge.copy(
                         fontFamily = FontFamily.Serif,
-                        fontSize = 16.sp
+                        fontSize = 20.sp
                     ),
-                    color = Color.DarkGray
+                    color = Color(0xFF1A237E)
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Row: Date on left and action buttons on right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Date: ${prescription.date}",
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Serif),
+                    color = Color.DarkGray
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { downloadPrescription(context, prescription) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.FileDownload,
+                        contentDescription = "Download Prescription",
+                        tint = Color(0xFF1A237E)
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "Prescription from Dr. ${prescription.doctorName}\n" +
+                                        "Date: ${prescription.date}\n" +
+                                        "Medications: ${prescription.medications.joinToString(", ")}"
+                            )
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Prescription via"))
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Share,
+                        contentDescription = "Share Prescription",
+                        tint = Color(0xFF1A237E)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Medications details
+            Text(
+                text = "Medications:",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontFamily = FontFamily.Serif,
+                    fontSize = 16.sp,
+                    color = Color(0xFF1A237E)
+                )
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = prescription.medications.joinToString(", "),
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = FontFamily.Serif,
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+            )
         }
+    }
+}
+
+/**
+ * Writes the prescription details to a text file in the Downloads directory.
+ */
+fun downloadPrescription(context: Context, prescription: Prescription) {
+    val prescriptionText = """
+        Prescription from Dr. ${prescription.doctorName}
+        Date: ${prescription.date}
+        Medications: ${prescription.medications.joinToString(", ")}
+    """.trimIndent()
+
+    // Create a unique file name
+    val fileName = "Prescription_${prescription.doctorName}_${prescription.date}.txt"
+    try {
+        // Get the Downloads directory
+        val downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if (!downloadsDir.exists()) {
+            downloadsDir.mkdirs()
+        }
+        val file = File(downloadsDir, fileName)
+        file.writeText(prescriptionText)
+        Toast.makeText(context, "Prescription downloaded to ${file.absolutePath}", Toast.LENGTH_LONG).show()
+    } catch (e: Exception) {
+        Toast.makeText(context, "Error downloading prescription: ${e.message}", Toast.LENGTH_LONG).show()
     }
 }
