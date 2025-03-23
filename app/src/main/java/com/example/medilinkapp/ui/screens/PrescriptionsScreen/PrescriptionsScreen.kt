@@ -11,6 +11,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,16 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.model.Prescription
 import com.example.medilinkapp.repository.FirestoreRepository
 import kotlinx.coroutines.launch
-import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,7 +57,25 @@ fun PrescriptionsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Your Prescriptions", fontSize = 22.sp, color = Color.White) },
+                title = {
+                    Column {
+                        Text(
+                            text = "Your Prescriptions",
+                            fontSize = 22.sp,
+                            color = Color.White,
+                            fontFamily = FontFamily.Serif
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Optional subtitle with guidance
+                        Text(
+                            text = "Need your medicines? Tap the cart to order online!",
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontFamily = FontFamily.Serif
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
@@ -67,7 +86,7 @@ fun PrescriptionsScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("pharmacyScreen") },
+                onClick = { navController.navigate("pharmacy") },
                 containerColor = Color(0xFF1A237E)
             ) {
                 Icon(
@@ -82,7 +101,11 @@ fun PrescriptionsScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFF5F5F5), Color(0xFFE0E0E0))
+                    )
+                )
         ) {
             when {
                 isLoading -> {
@@ -92,7 +115,7 @@ fun PrescriptionsScreen(navController: NavController) {
                     ) {
                         CircularProgressIndicator(color = Color(0xFF1A237E))
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Loading prescriptions...", style = MaterialTheme.typography.bodySmall)
+                        Text("Loading prescriptions...", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Serif))
                     }
                 }
                 error != null -> {
@@ -102,7 +125,7 @@ fun PrescriptionsScreen(navController: NavController) {
                     ) {
                         Text(
                             "Error: $error",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Serif),
                             color = MaterialTheme.colorScheme.error
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -110,7 +133,7 @@ fun PrescriptionsScreen(navController: NavController) {
                             isLoading = true
                             loadPrescriptions()
                         }) {
-                            Text("Retry")
+                            Text("Retry", fontFamily = FontFamily.Serif)
                         }
                     }
                 }
@@ -119,7 +142,7 @@ fun PrescriptionsScreen(navController: NavController) {
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("No prescriptions available.", style = MaterialTheme.typography.bodySmall)
+                        Text("No prescriptions available.", style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Serif))
                     }
                 }
                 else -> {
@@ -129,7 +152,13 @@ fun PrescriptionsScreen(navController: NavController) {
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(prescriptions) { prescription ->
-                            PrescriptionCard(prescription)
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = fadeIn(),
+                                exit = fadeOut()
+                            ) {
+                                PrescriptionCard(prescription)
+                            }
                         }
                     }
                 }
@@ -137,6 +166,7 @@ fun PrescriptionsScreen(navController: NavController) {
         }
     }
 }
+
 @Composable
 fun PrescriptionCard(prescription: Prescription) {
     val context = LocalContext.current
@@ -147,21 +177,19 @@ fun PrescriptionCard(prescription: Prescription) {
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
-            // Doctor's name at the top
             Text(
                 text = "Prescription from Dr. ${prescription.doctorName}",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Serif),
                 color = Color(0xFF1A237E)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            // Row containing the Date on the left and action buttons on the right
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Date: ${prescription.date}",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Serif),
                     color = Color.Gray
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -200,12 +228,10 @@ fun PrescriptionCard(prescription: Prescription) {
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            // Medications text placed below the row with date and buttons
             Text(
                 text = "Medications: ${prescription.medications.joinToString(", ")}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Serif)
             )
         }
     }
 }
-
