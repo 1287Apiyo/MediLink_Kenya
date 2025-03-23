@@ -11,21 +11,27 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.StepCounterSensor
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 
-// Utility: Compute sleep hours (expects "HH:mm" format)
+// ----------------------------
+// Utility Functions
+// ----------------------------
+
+/**
+ * Compute sleep hours from start/end times in "HH:mm" format.
+ */
 fun computeSleepHours(start: String, end: String): Float {
     if (!start.contains(":") || !end.contains(":")) {
         throw IllegalArgumentException("Time must be in HH:mm format")
@@ -49,76 +55,95 @@ fun computeSleepHours(start: String, end: String): Float {
     return diffMinutes / 60f
 }
 
-// Save health data to Firebase Realtime Database.
-fun saveHealthDataToRealtimeDatabase(heartRate: Int, sleepHours: Float, steps: Int) {
-    // Use a consistent UID (ensure anonymous auth is enabled if not signing in)
+/**
+ * Observes cumulative health data (steps) stored in Firebase.
+ * The cumulative node is expected at "users/{uid}/cumulativeHealthData".
+ */
+fun observeCumulativeHealthData(onDataChanged: (Int) -> Unit) {
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
-    val database = FirebaseDatabase.getInstance()
-    val userHealthRef = database.getReference("users").child(userId).child("healthData")
-
-    val newRecordRef = userHealthRef.push()
-    val healthData = mapOf(
-        "heartRate" to heartRate,
-        "sleepHours" to sleepHours,
-        "steps" to steps,
-        "timestamp" to System.currentTimeMillis()
-    )
-    newRecordRef.setValue(healthData)
-        .addOnSuccessListener {
-            Log.d("RealtimeDB", "Health data saved successfully!")
+    val cumulativeRef = FirebaseDatabase.getInstance()
+        .getReference("users")
+        .child(userId)
+        .child("cumulativeHealthData")
+    cumulativeRef.addValueEventListener(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            // Default to 0 if not present.
+            val steps = snapshot.child("steps").getValue(Int::class.java) ?: 0
+            onDataChanged(steps)
         }
-        .addOnFailureListener { error ->
-            Log.w("RealtimeDB", "Error saving health data", error)
-        }
-}
-
-// Observe realtime data from Firebase.
-fun observeHealthData(onDataChanged: (List<Map<String, Any>>) -> Unit) {
-    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
-    val database = FirebaseDatabase.getInstance()
-    val healthRef = database.getReference("users").child(userId).child("healthData")
-
-    healthRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
-        override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
-            val dataList = mutableListOf<Map<String, Any>>()
-            snapshot.children.forEach { dataSnapshot ->
-                val data = dataSnapshot.value as? Map<String, Any>
-                if (data != null) {
-                    dataList.add(data)
-                }
-            }
-            onDataChanged(dataList)
-        }
-        override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
-            Log.w("RealtimeDB", "Failed to read health data.", error.toException())
+        override fun onCancelled(error: DatabaseError) {
+            Log.w("RealtimeDB", "Failed to read cumulative data.", error.toException())
         }
     })
 }
 
+/**
+ * Updates cumulative health data in Firebase.
+ */
+fun updateCumulativeHealthData(healthData: Map<String, Any>) {
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+    val cumulativeRef = FirebaseDatabase.getInstance()
+        .getReference("users")
+        .child(userId)
+        .child("cumulativeHealthData")
+    cumulativeRef.setValue(healthData)
+        .addOnSuccessListener { Log.d("RealtimeDB", "Cumulative data updated!") }
+        .addOnFailureListener { error ->
+            Log.w("RealtimeDB", "Error updating cumulative data", error)
+        }
+}
+
+// ----------------------------
+// UI Code
+// ----------------------------
+
+/**
+ * HealthMonitoringScreen uses a step sensor and input fields.
+ * It loads cumulative data from Firebase and computes an "effective" step count:
+ * stored cumulative steps + (current sensor reading - session start baseline).
+ * Clicking the "Calculate Sleep Hours" button updates Firebase with the new cumulative values.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState<Int>) {
-    // Update step count using a sensor.
+    // Use the sensor to update the step count.
     StepCounterSensor(stepCount = stepCount)
 
-    // States for user input.
-    var userHeartRate by remember { mutableStateOf("") }
-    var sleepStart by remember { mutableStateOf("") }
-    var sleepEnd by remember { mutableStateOf("") }
-    var computedSleepHours by remember { mutableStateOf(0f) }
+    // Persist user inputs.
+    var userHeartRate by rememberSaveable { mutableStateOf("") }
+    var sleepStart by rememberSaveable { mutableStateOf("") }
+    var sleepEnd by rememberSaveable { mutableStateOf("") }
+    var computedSleepHours by rememberSaveable { mutableStateOf(0f) }
 
-    // State to hold realtime records.
-    val realtimeHealthData = remember { mutableStateListOf<Map<String, Any>>() }
-
-    // Observe realtime data on screen start.
-    LaunchedEffect(Unit) {
-        observeHealthData { dataList ->
-            realtimeHealthData.clear()
-            realtimeHealthData.addAll(dataList)
+    // Auto-calculate sleep hours when valid input is provided.
+    LaunchedEffect(sleepStart, sleepEnd) {
+        if (sleepStart.contains(":") && sleepEnd.contains(":")) {
+            try {
+                computedSleepHours = computeSleepHours(sleepStart, sleepEnd)
+            } catch (e: Exception) {
+                Log.e("HealthMonitoring", "Sleep calculation error: ${e.message}")
+            }
         }
     }
 
-    // Simulated daily step data (ensure this is updated when sensor changes).
+    // State for cumulative steps loaded from Firebase.
+    var cumulativeSteps by rememberSaveable { mutableStateOf(0) }
+    // Record the sensor's step count at session start.
+    var sessionStartSteps by rememberSaveable { mutableStateOf(0) }
+
+    // On startup, observe Firebase cumulative data.
+    LaunchedEffect(Unit) {
+        observeCumulativeHealthData { storedSteps ->
+            cumulativeSteps = storedSteps
+            // Set the baseline when data loads.
+            sessionStartSteps = stepCount.value
+        }
+    }
+
+    // Compute effective steps.
+    val effectiveSteps = cumulativeSteps + (stepCount.value - sessionStartSteps)
+
+    // For the graph, update "today's" step count.
     val dailyStepData = remember {
         mutableStateListOf(
             "Mon" to 4000,
@@ -127,11 +152,11 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
             "Thu" to 7500,
             "Fri" to 9000,
             "Sat" to 8500,
-            "Sun" to stepCount.value // Today's steps.
+            "Sun" to effectiveSteps
         )
     }
-    LaunchedEffect(stepCount.value) {
-        dailyStepData[dailyStepData.size - 1] = "Sun" to stepCount.value
+    LaunchedEffect(effectiveSteps) {
+        dailyStepData[dailyStepData.size - 1] = "Sun" to effectiveSteps
     }
 
     Scaffold(
@@ -159,6 +184,7 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Input Section
             HealthDataInputSection(
                 userHeartRate = userHeartRate,
                 onHeartRateChange = { userHeartRate = it },
@@ -167,34 +193,56 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
                 sleepEnd = sleepEnd,
                 onSleepEndChange = { sleepEnd = it },
                 onCalculateSleep = {
-                    // Validate and compute sleep hours.
+                    // Validate sleep input.
                     if (sleepStart.isBlank() || sleepEnd.isBlank() || !sleepStart.contains(":") || !sleepEnd.contains(":")) {
                         Log.w("HealthMonitoring", "Invalid sleep input.")
                         return@HealthDataInputSection
                     }
                     try {
                         computedSleepHours = computeSleepHours(sleepStart, sleepEnd)
+                        // Convert heart rate.
                         val heartRateInt = userHeartRate.toIntOrNull() ?: 0
-                        saveHealthDataToRealtimeDatabase(heartRateInt, computedSleepHours, stepCount.value)
+                        // Update cumulative data in Firebase.
+                        // Here we add the new steps from this session.
+                        val sessionIncrement = stepCount.value - sessionStartSteps
+                        val newCumulativeSteps = cumulativeSteps + sessionIncrement
+                        updateCumulativeHealthData(
+                            mapOf(
+                                "steps" to newCumulativeSteps,
+                                "heartRate" to heartRateInt,
+                                "sleepHours" to computedSleepHours,
+                                "timestamp" to System.currentTimeMillis()
+                            )
+                        )
+                        // After updating, reset the session baseline.
+                        sessionStartSteps = stepCount.value
                     } catch (e: Exception) {
                         Log.e("HealthMonitoring", "Error: ${e.message}")
                     }
                 }
             )
+            // Display cumulative data in the cards.
             HealthMetricsSection(
-                steps = stepCount.value,
+                steps = effectiveSteps,
                 heartRate = userHeartRate.toIntOrNull() ?: 0,
                 sleepHours = computedSleepHours
             )
-            Text("Weekly Step Count", fontFamily = FontFamily.Serif, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
+            Text(
+                "Weekly Step Count",
+                fontFamily = FontFamily.Serif,
+                fontSize = 18.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
             SmoothStepsLineChart(stepData = dailyStepData.map { it.second })
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
-            Text("Realtime Health Data Records", fontFamily = FontFamily.Serif, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-            RealtimeHealthDataList(records = realtimeHealthData)
+            // (The realtime list has been removed.)
         }
     }
 }
 
+/**
+ * Input section for heart rate and sleep times.
+ * Includes a button to calculate sleep hours and update Firebase.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthDataInputSection(
@@ -206,7 +254,10 @@ fun HealthDataInputSection(
     onSleepEndChange: (String) -> Unit,
     onCalculateSleep: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Text("Enter Health Data", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(
             value = userHeartRate,
@@ -229,13 +280,19 @@ fun HealthDataInputSection(
         Button(
             onClick = onCalculateSleep,
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
             Text("Calculate Sleep Hours", fontFamily = FontFamily.Serif)
         }
     }
 }
 
+/**
+ * Displays the health metrics (steps, heart rate, sleep hours) in cards.
+ */
 @Composable
 fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
     Row(
@@ -249,6 +306,9 @@ fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
     }
 }
 
+/**
+ * A single metric card.
+ */
 @Composable
 fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
     Card(
@@ -269,6 +329,9 @@ fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
     }
 }
 
+/**
+ * Draws a smooth line chart for weekly steps.
+ */
 @Composable
 fun SmoothStepsLineChart(stepData: List<Int>) {
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -278,12 +341,19 @@ fun SmoothStepsLineChart(stepData: List<Int>) {
             val canvasHeight = size.height
             val maxSteps = (stepData.maxOrNull() ?: 0).toFloat()
             if (maxSteps == 0f) return@Canvas
+            // Draw grid lines.
             val gridLineCount = 5
             val gridSpacing = canvasHeight / gridLineCount
             for (i in 0..gridLineCount) {
                 val y = i * gridSpacing
-                drawLine(color = Color.LightGray, start = Offset(0f, y), end = Offset(canvasWidth, y), strokeWidth = 1.dp.toPx())
+                drawLine(
+                    color = Color.LightGray,
+                    start = Offset(0f, y),
+                    end = Offset(canvasWidth, y),
+                    strokeWidth = 1.dp.toPx()
+                )
             }
+            // Create chart points.
             val pointSpacing = canvasWidth / (stepData.size - 1)
             val points = stepData.mapIndexed { index, value ->
                 Offset(x = index * pointSpacing, y = canvasHeight - (value / maxSteps * canvasHeight))
@@ -311,18 +381,6 @@ fun SmoothStepsLineChart(stepData: List<Int>) {
             listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
                 Text(text = day, fontFamily = FontFamily.Serif, fontSize = 10.sp, color = MaterialTheme.colorScheme.onBackground)
             }
-        }
-    }
-}
-
-@Composable
-fun RealtimeHealthDataList(records: List<Map<String, Any>>) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        records.forEach { record ->
-            val heartRate = record["heartRate"] ?: "N/A"
-            val sleepHours = record["sleepHours"] ?: "N/A"
-            val steps = record["steps"] ?: "N/A"
-            Text(text = "HR: $heartRate, Sleep: $sleepHours hrs, Steps: $steps", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(4.dp))
         }
     }
 }
