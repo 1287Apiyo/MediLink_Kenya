@@ -1,31 +1,28 @@
 package com.example.medilinkapp.repository
 
+import com.example.medilinkapp.model.Doctor
+import com.example.medilinkapp.model.Prescription
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import com.example.medilinkapp.R
-import com.example.medilinkapp.model.Doctor
 
 class FirestoreRepository {
-    private val db = FirebaseFirestore.getInstance()
 
+    private val firestore = FirebaseFirestore.getInstance()
+
+    // Fetch doctors from Firestore
     suspend fun getDoctors(): List<Doctor> {
-        return try {
-            val snapshot = db.collection("doctors").get().await()
-            snapshot.documents.mapIndexed { index, doc ->
-                val doctor = doc.toObject(Doctor::class.java)
-                doctor?.copy(drawableId = getDoctorImage(index)) ?: Doctor()
-            }
-        } catch (e: Exception) {
-            emptyList() // Return empty if error
+        val snapshot = firestore.collection("doctors").get().await()
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Doctor::class.java)
         }
     }
 
-    private fun getDoctorImage(index: Int): Int {
-        val images = listOf(
-            R.drawable.doctor1,
-            R.drawable.doctor2,
-            R.drawable.doctor3
-        )
-        return images[index % images.size] // Cycle through images
+    suspend fun getPrescriptions(): List<Prescription> {
+        val snapshot = firestore.collection("Prescription").get().await()
+        println("Fetched ${snapshot.documents.size} prescriptions from Firestore")
+        return snapshot.documents.mapNotNull { doc ->
+            doc.toObject(Prescription::class.java)?.copy(id = doc.id)
+        }
     }
+
 }

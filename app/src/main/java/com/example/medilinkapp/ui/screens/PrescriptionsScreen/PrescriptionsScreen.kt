@@ -1,105 +1,166 @@
 package com.example.medilinkapp.ui.screens.prescriptions
 
-import android.content.Context
-import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.medilinkapp.model.Prescription
+import com.example.medilinkapp.repository.FirestoreRepository
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionsScreen(navController: NavController) {
-    val context = LocalContext.current
-    val prescriptions = remember { mutableStateListOf("Prescription 1", "Prescription 2") }
+    val repository = FirestoreRepository()
+    var prescriptions by remember { mutableStateOf(emptyList<Prescription>()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        // Header
-        TopAppBar(
-            title = { Text("E-Prescriptions", fontSize = 22.sp, color = Color.White) },
-            navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
-
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Prescription List
-        PrescriptionList(prescriptions, context)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Upload Button
-        UploadPrescriptionButton(context)
+    fun loadPrescriptions() {
+        coroutineScope.launch {
+            try {
+                prescriptions = repository.getPrescriptions()
+                error = null
+            } catch (e: Exception) {
+                error = e.message
+            } finally {
+                isLoading = false
+            }
+        }
     }
-}
 
-@Composable
-fun PrescriptionList(prescriptions: List<String>, context: Context) {
-    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-        prescriptions.forEach { prescription ->
-            PrescriptionCard(prescription, context)
+    LaunchedEffect(Unit) { loadPrescriptions() }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Your Prescriptions", fontSize = 22.sp, color = Color.White) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
+            )
+        }
+    ) { paddingValues ->
+        // Use a subtle gradient background for a modern look
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFF5F5F5), Color(0xFFE0E0E0))
+                    )
+                )
+        ) {
+            when {
+                isLoading -> {
+                    // Centered loading indicator with text
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(color = Color(0xFF1A237E))
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("Loading prescriptions...", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                error != null -> {
+                    // Error state with retry button
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            "Error: $error",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(onClick = {
+                            isLoading = true
+                            loadPrescriptions()
+                        }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+                prescriptions.isEmpty() -> {
+                    // Empty state message
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("No prescriptions available.", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                else -> {
+                    // Prescription list with a LazyColumn and animated visibility for a smooth appearance
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(prescriptions) { prescription ->
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = fadeIn(),
+                                exit = fadeOut()
+                            ) {
+                                PrescriptionCard(prescription)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun PrescriptionCard(prescription: String, context: Context) {
+fun PrescriptionCard(prescription: Prescription) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clickable { downloadPrescription(context, prescription) },
-        shape = RoundedCornerShape(12.dp),
+            .clip(MaterialTheme.shapes.medium),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Text(
-            text = prescription,
-            modifier = Modifier.padding(16.dp),
-            fontSize = 16.sp
-        )
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(
+                text = "Prescription from Dr. ${prescription.doctorName}",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color(0xFF1A237E)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Date: ${prescription.date}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Medications: ${prescription.medications.joinToString(", ")}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
     }
-}
-
-@Composable
-fun UploadPrescriptionButton(context: Context) {
-    Button(
-        onClick = { uploadPrescription(context) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(50),
-        colors = ButtonDefaults.buttonColors(containerColor =Color(0xFF1A237E))
-    ) {
-        Text("Upload New Prescription", color = Color.White)
-    }
-}
-
-// Functions for Toast Messages
-fun uploadPrescription(context: Context) {
-    Toast.makeText(context, "Upload feature coming soon!", Toast.LENGTH_SHORT).show()
-}
-
-fun downloadPrescription(context: Context, prescription: String) {
-    Toast.makeText(context, "Downloading $prescription...", Toast.LENGTH_SHORT).show()
 }
