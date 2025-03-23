@@ -19,18 +19,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(navController: NavController) {
-    // Dummy state for input fields
+    // States for input fields
     val fullName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val phone = remember { mutableStateOf("") }
-    val dob = remember { mutableStateOf("") }  // Date of Birth as MM/DD/YYYY
-    val gender = remember { mutableStateOf("") } // e.g., "Male", "Female", etc.
+    val dob = remember { mutableStateOf("") }      // Date of Birth as MM/DD/YYYY
+    val gender = remember { mutableStateOf("") }     // e.g., "Male", "Female", etc.
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
+
+    // State for error messages
+    val errorMessage = remember { mutableStateOf("") }
+    val isLoading = remember { mutableStateOf(false) }
+
+    // Firebase instances
+    val firebaseAuth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
 
     MedilinkAppTheme {
         Scaffold(
@@ -43,7 +53,6 @@ fun SignupScreen(navController: NavController) {
                     .padding(paddingValues),
                 contentAlignment = Alignment.TopCenter
             ) {
-                // Make the column scrollable if content overflows
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -62,6 +71,19 @@ fun SignupScreen(navController: NavController) {
                             color = Color.Black
                         )
                     )
+
+                    // Display error message if any
+                    if (errorMessage.value.isNotEmpty()) {
+                        Text(
+                            text = errorMessage.value,
+                            style = TextStyle(
+                                fontFamily = FontFamily.Serif,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp,
+                                color = Color.Red
+                            )
+                        )
+                    }
 
                     // Full Name Field
                     OutlinedTextField(
@@ -172,13 +194,56 @@ fun SignupScreen(navController: NavController) {
 
                     // Primary Sign Up Button
                     Button(
-                        onClick = { navController.navigate("dashboard") },
+                        onClick = {
+                            // Clear previous error
+                            errorMessage.value = ""
+
+                            // Simple validation check for passwords match
+                            if (password.value != confirmPassword.value) {
+                                errorMessage.value = "Passwords do not match"
+                                return@Button
+                            }
+                            isLoading.value = true
+
+                            // Sign up user using FirebaseAuth
+                            firebaseAuth.createUserWithEmailAndPassword(email.value, password.value)
+                                .addOnCompleteListener { task ->
+                                    isLoading.value = false
+                                    if (task.isSuccessful) {
+                                        // User created, now save additional user data in Firestore
+                                        val uid = firebaseAuth.currentUser?.uid
+                                        if (uid != null) {
+                                            val userData = hashMapOf(
+                                                "fullName" to fullName.value,
+                                                "email" to email.value,
+                                                "phone" to phone.value,
+                                                "dob" to dob.value,
+                                                "gender" to gender.value
+                                            )
+                                            firestore.collection("users")
+                                                .document(uid)
+                                                .set(userData)
+                                                .addOnSuccessListener {
+                                                    navController.navigate("dashboard")
+                                                }
+                                                .addOnFailureListener { e ->
+                                                    errorMessage.value = e.message ?: "Failed to save user details"
+                                                }
+                                        } else {
+                                            errorMessage.value = "User ID is null"
+                                        }
+                                    } else {
+                                        // Sign up failed, show error message
+                                        errorMessage.value = task.exception?.message ?: "Sign up failed"
+                                    }
+                                }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
                         colors = buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text(
-                            text = "Sign Up",
+                            text = if (isLoading.value) "Signing Up..." else "Sign Up",
                             style = TextStyle(
                                 fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.Bold,
@@ -199,8 +264,7 @@ fun SignupScreen(navController: NavController) {
                             style = TextStyle(
                                 fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-
+                                fontSize = 18.sp
                             )
                         )
                     }
