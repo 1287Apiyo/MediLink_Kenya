@@ -1,5 +1,6 @@
 package com.example.medilinkapp.ui.screens.healthmonitoring
 
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,24 +17,30 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
-
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.StepCounterSensor
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
-// Utility function: Given two time strings "HH:mm", compute difference in hours as Float.
-// Handles overnight differences.
+// Utility: Compute sleep hours (expects "HH:mm" format)
 fun computeSleepHours(start: String, end: String): Float {
-    // Split into hours and minutes.
-    val (startH, startM) = start.split(":").map { it.toIntOrNull() ?: 0 }
-    val (endH, endM) = end.split(":").map { it.toIntOrNull() ?: 0 }
-    // Convert times to minutes from midnight.
+    if (!start.contains(":") || !end.contains(":")) {
+        throw IllegalArgumentException("Time must be in HH:mm format")
+    }
+    val startParts = start.split(":")
+    val endParts = end.split(":")
+    if (startParts.size < 2 || endParts.size < 2) {
+        throw IllegalArgumentException("Invalid time format")
+    }
+    val startH = startParts[0].toIntOrNull() ?: 0
+    val startM = startParts[1].toIntOrNull() ?: 0
+    val endH = endParts[0].toIntOrNull() ?: 0
+    val endM = endParts[1].toIntOrNull() ?: 0
     val startMinutes = startH * 60 + startM
     val endMinutes = endH * 60 + endM
-    // If end is less than start, assume overnight.
     val diffMinutes = if (endMinutes >= startMinutes) {
         endMinutes - startMinutes
     } else {
@@ -42,19 +49,76 @@ fun computeSleepHours(start: String, end: String): Float {
     return diffMinutes / 60f
 }
 
+// Save health data to Firebase Realtime Database.
+fun saveHealthDataToRealtimeDatabase(heartRate: Int, sleepHours: Float, steps: Int) {
+    // Use a consistent UID (ensure anonymous auth is enabled if not signing in)
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+    val database = FirebaseDatabase.getInstance()
+    val userHealthRef = database.getReference("users").child(userId).child("healthData")
+
+    val newRecordRef = userHealthRef.push()
+    val healthData = mapOf(
+        "heartRate" to heartRate,
+        "sleepHours" to sleepHours,
+        "steps" to steps,
+        "timestamp" to System.currentTimeMillis()
+    )
+    newRecordRef.setValue(healthData)
+        .addOnSuccessListener {
+            Log.d("RealtimeDB", "Health data saved successfully!")
+        }
+        .addOnFailureListener { error ->
+            Log.w("RealtimeDB", "Error saving health data", error)
+        }
+}
+
+// Observe realtime data from Firebase.
+fun observeHealthData(onDataChanged: (List<Map<String, Any>>) -> Unit) {
+    val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
+    val database = FirebaseDatabase.getInstance()
+    val healthRef = database.getReference("users").child(userId).child("healthData")
+
+    healthRef.addValueEventListener(object : com.google.firebase.database.ValueEventListener {
+        override fun onDataChange(snapshot: com.google.firebase.database.DataSnapshot) {
+            val dataList = mutableListOf<Map<String, Any>>()
+            snapshot.children.forEach { dataSnapshot ->
+                val data = dataSnapshot.value as? Map<String, Any>
+                if (data != null) {
+                    dataList.add(data)
+                }
+            }
+            onDataChanged(dataList)
+        }
+        override fun onCancelled(error: com.google.firebase.database.DatabaseError) {
+            Log.w("RealtimeDB", "Failed to read health data.", error.toException())
+        }
+    })
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState<Int>) {
-    // Use the real sensor to update stepCount.
+    // Update step count using a sensor.
     StepCounterSensor(stepCount = stepCount)
 
-    // Mutable states for user-input metrics.
-    var userHeartRate by remember { mutableStateOf("") } // User inputs heart rate manually.
-    var sleepStart by remember { mutableStateOf("") }      // e.g., "23:00"
-    var sleepEnd by remember { mutableStateOf("") }        // e.g., "07:00"
+    // States for user input.
+    var userHeartRate by remember { mutableStateOf("") }
+    var sleepStart by remember { mutableStateOf("") }
+    var sleepEnd by remember { mutableStateOf("") }
     var computedSleepHours by remember { mutableStateOf(0f) }
 
-    // Simulate daily step data for 7 days.
+    // State to hold realtime records.
+    val realtimeHealthData = remember { mutableStateListOf<Map<String, Any>>() }
+
+    // Observe realtime data on screen start.
+    LaunchedEffect(Unit) {
+        observeHealthData { dataList ->
+            realtimeHealthData.clear()
+            realtimeHealthData.addAll(dataList)
+        }
+    }
+
+    // Simulated daily step data (ensure this is updated when sensor changes).
     val dailyStepData = remember {
         mutableStateListOf(
             "Mon" to 4000,
@@ -70,31 +134,18 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
         dailyStepData[dailyStepData.size - 1] = "Sun" to stepCount.value
     }
 
-    // In a real app, heart rate and sleep hours would come from sensors or health APIs.
-    // Here, we let the user input them manually.
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Health Monitoring",
-                        fontFamily = FontFamily.Serif,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                    Text("Health Monitoring", fontFamily = FontFamily.Serif, color = MaterialTheme.colorScheme.onPrimary)
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
             )
         }
     ) { paddingValues ->
@@ -108,7 +159,6 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Health Data Input Section:
             HealthDataInputSection(
                 userHeartRate = userHeartRate,
                 onHeartRateChange = { userHeartRate = it },
@@ -117,22 +167,30 @@ fun HealthMonitoringScreen(navController: NavController, stepCount: MutableState
                 sleepEnd = sleepEnd,
                 onSleepEndChange = { sleepEnd = it },
                 onCalculateSleep = {
-                    computedSleepHours = computeSleepHours(sleepStart, sleepEnd)
+                    // Validate and compute sleep hours.
+                    if (sleepStart.isBlank() || sleepEnd.isBlank() || !sleepStart.contains(":") || !sleepEnd.contains(":")) {
+                        Log.w("HealthMonitoring", "Invalid sleep input.")
+                        return@HealthDataInputSection
+                    }
+                    try {
+                        computedSleepHours = computeSleepHours(sleepStart, sleepEnd)
+                        val heartRateInt = userHeartRate.toIntOrNull() ?: 0
+                        saveHealthDataToRealtimeDatabase(heartRateInt, computedSleepHours, stepCount.value)
+                    } catch (e: Exception) {
+                        Log.e("HealthMonitoring", "Error: ${e.message}")
+                    }
                 }
             )
-            // Display metrics.
             HealthMetricsSection(
                 steps = stepCount.value,
-                heartRate = if (userHeartRate.isNotBlank()) userHeartRate.toIntOrNull() ?: 0 else 0,
+                heartRate = userHeartRate.toIntOrNull() ?: 0,
                 sleepHours = computedSleepHours
             )
-            Text(
-                text = "Weekly Step Count",
-                fontFamily = FontFamily.Serif,
-                fontSize = 18.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Text("Weekly Step Count", fontFamily = FontFamily.Serif, fontSize = 18.sp, color = MaterialTheme.colorScheme.onBackground)
             SmoothStepsLineChart(stepData = dailyStepData.map { it.second })
+            Divider(modifier = Modifier.padding(vertical = 16.dp))
+            Text("Realtime Health Data Records", fontFamily = FontFamily.Serif, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
+            RealtimeHealthDataList(records = realtimeHealthData)
         }
     }
 }
@@ -148,15 +206,8 @@ fun HealthDataInputSection(
     onSleepEndChange: (String) -> Unit,
     onCalculateSleep: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "Enter Health Data",
-            fontFamily = FontFamily.Serif,
-            style = MaterialTheme.typography.titleMedium
-        )
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Enter Health Data", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.titleMedium)
         OutlinedTextField(
             value = userHeartRate,
             onValueChange = onHeartRateChange,
@@ -178,17 +229,12 @@ fun HealthDataInputSection(
         Button(
             onClick = onCalculateSleep,
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
         ) {
             Text("Calculate Sleep Hours", fontFamily = FontFamily.Serif)
         }
     }
 }
-
-
 
 @Composable
 fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
@@ -197,24 +243,9 @@ fun HealthMetricsSection(steps: Int, heartRate: Int, sleepHours: Float) {
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        MetricCard(
-            label = "Steps",
-            value = steps.toString(),
-            unit = "",
-            iconColor = Color(0xFF4CAF50)
-        )
-        MetricCard(
-            label = "Heart Rate",
-            value = heartRate.toString(),
-            unit = "BPM",
-            iconColor = Color.Red
-        )
-        MetricCard(
-            label = "Sleep",
-            value = String.format("%.1f", sleepHours),
-            unit = "hrs",
-            iconColor = Color.Blue
-        )
+        MetricCard(label = "Steps", value = steps.toString(), unit = "", iconColor = Color(0xFF4CAF50))
+        MetricCard(label = "Heart Rate", value = heartRate.toString(), unit = "BPM", iconColor = Color.Red)
+        MetricCard(label = "Sleep", value = String.format("%.1f", sleepHours), unit = "hrs", iconColor = Color.Blue)
     }
 }
 
@@ -224,28 +255,16 @@ fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
         modifier = Modifier.size(width = 100.dp, height = 100.dp),
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "$value $unit",
-                fontFamily = FontFamily.Serif,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Text("$value $unit", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = label,
-                fontFamily = FontFamily.Serif,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(label, fontFamily = FontFamily.Serif, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -253,37 +272,22 @@ fun MetricCard(label: String, value: String, unit: String, iconColor: Color) {
 @Composable
 fun SmoothStepsLineChart(stepData: List<Int>) {
     val primaryColor = MaterialTheme.colorScheme.primary
-
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(220.dp)
-    ) {
+    Box(modifier = Modifier.fillMaxWidth().height(220.dp)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasWidth = size.width
             val canvasHeight = size.height
             val maxSteps = (stepData.maxOrNull() ?: 0).toFloat()
             if (maxSteps == 0f) return@Canvas
-
-            // Draw horizontal grid lines.
             val gridLineCount = 5
             val gridSpacing = canvasHeight / gridLineCount
             for (i in 0..gridLineCount) {
                 val y = i * gridSpacing
-                drawLine(
-                    color = Color.LightGray,
-                    start = Offset(0f, y),
-                    end = Offset(canvasWidth, y),
-                    strokeWidth = 1.dp.toPx()
-                )
+                drawLine(color = Color.LightGray, start = Offset(0f, y), end = Offset(canvasWidth, y), strokeWidth = 1.dp.toPx())
             }
-
             val pointSpacing = canvasWidth / (stepData.size - 1)
-            // Create a list of points.
             val points = stepData.mapIndexed { index, value ->
                 Offset(x = index * pointSpacing, y = canvasHeight - (value / maxSteps * canvasHeight))
             }
-
-            // Build a smooth path using cubic Bezier curves.
             val path = Path().apply {
                 if (points.isNotEmpty()) {
                     moveTo(points.first().x, points.first().y)
@@ -291,46 +295,34 @@ fun SmoothStepsLineChart(stepData: List<Int>) {
                         val p0 = points[i]
                         val p1 = points[i + 1]
                         val midX = (p0.x + p1.x) / 2
-                        cubicTo(
-                            x1 = midX, y1 = p0.y,
-                            x2 = midX, y2 = p1.y,
-                            x3 = p1.x, y3 = p1.y
-                        )
+                        cubicTo(x1 = midX, y1 = p0.y, x2 = midX, y2 = p1.y, x3 = p1.x, y3 = p1.y)
                     }
                 }
             }
-
-            drawPath(
-                path = path,
-                color = primaryColor,
-                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-            )
-
-            // Draw circles at each point.
+            drawPath(path = path, color = primaryColor, style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round))
             points.forEach { point ->
-                drawCircle(
-                    color = primaryColor,
-                    radius = 6.dp.toPx(),
-                    center = point
-                )
+                drawCircle(color = primaryColor, radius = 6.dp.toPx(), center = point)
             }
         }
-        // X-axis labels.
         Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { day ->
-                Text(
-                    text = day,
-                    fontFamily = FontFamily.Serif,
-                    fontSize = 10.sp,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Text(text = day, fontFamily = FontFamily.Serif, fontSize = 10.sp, color = MaterialTheme.colorScheme.onBackground)
             }
+        }
+    }
+}
+
+@Composable
+fun RealtimeHealthDataList(records: List<Map<String, Any>>) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        records.forEach { record ->
+            val heartRate = record["heartRate"] ?: "N/A"
+            val sleepHours = record["sleepHours"] ?: "N/A"
+            val steps = record["steps"] ?: "N/A"
+            Text(text = "HR: $heartRate, Sleep: $sleepHours hrs, Steps: $steps", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(4.dp))
         }
     }
 }
