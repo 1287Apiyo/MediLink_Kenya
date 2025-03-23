@@ -1,5 +1,7 @@
 package com.example.medilinkapp.ui.screens.prescriptions
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,6 +26,8 @@ import com.example.medilinkapp.repository.FirestoreRepository
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,33 +64,38 @@ fun PrescriptionsScreen(navController: NavController) {
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate("pharmacyScreen") },
+                containerColor = Color(0xFF1A237E)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.ShoppingCart,
+                    contentDescription = "Order Medicine",
+                    tint = Color.White
+                )
+            }
         }
     ) { paddingValues ->
-        // Use a subtle gradient background for a modern look
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFF5F5F5), Color(0xFFE0E0E0))
-                    )
-                )
+                .background(Color(0xFFF5F5F5))
         ) {
             when {
                 isLoading -> {
-                    // Centered loading indicator with text
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CircularProgressIndicator(color = Color(0xFF1A237E))
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text("Loading prescriptions...", style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 error != null -> {
-                    // Error state with retry button
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -96,7 +105,7 @@ fun PrescriptionsScreen(navController: NavController) {
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Button(onClick = {
                             isLoading = true
                             loadPrescriptions()
@@ -106,7 +115,6 @@ fun PrescriptionsScreen(navController: NavController) {
                     }
                 }
                 prescriptions.isEmpty() -> {
-                    // Empty state message
                     Column(
                         modifier = Modifier.align(Alignment.Center),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -115,20 +123,13 @@ fun PrescriptionsScreen(navController: NavController) {
                     }
                 }
                 else -> {
-                    // Prescription list with a LazyColumn and animated visibility for a smooth appearance
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(prescriptions) { prescription ->
-                            AnimatedVisibility(
-                                visible = true,
-                                enter = fadeIn(),
-                                exit = fadeOut()
-                            ) {
-                                PrescriptionCard(prescription)
-                            }
+                            PrescriptionCard(prescription)
                         }
                     }
                 }
@@ -136,11 +137,9 @@ fun PrescriptionsScreen(navController: NavController) {
         }
     }
 }
-
-
-
 @Composable
 fun PrescriptionCard(prescription: Prescription) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
@@ -148,33 +147,28 @@ fun PrescriptionCard(prescription: Prescription) {
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
+            // Doctor's name at the top
             Text(
                 text = "Prescription from Dr. ${prescription.doctorName}",
                 style = MaterialTheme.typography.titleMedium,
                 color = Color(0xFF1A237E)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Date: ${prescription.date}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Medications: ${prescription.medications.joinToString(", ")}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            // Add a spacer to bring the buttons a bit closer to the content
-            Spacer(modifier = Modifier.height(16.dp))
-            // Row for action buttons, centered horizontally and vertically
+            // Row containing the Date on the left and action buttons on the right
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Text(
+                    text = "Date: ${prescription.date}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     onClick = {
-                        // TODO: Implement download logic here
+                        Toast.makeText(context, "Downloading prescription...", Toast.LENGTH_SHORT).show()
+                        // TODO: Implement actual download functionality
                     }
                 ) {
                     Icon(
@@ -183,10 +177,19 @@ fun PrescriptionCard(prescription: Prescription) {
                         tint = Color(0xFF1A237E)
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
                 IconButton(
                     onClick = {
-                        // TODO: Implement share logic here
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "Prescription from Dr. ${prescription.doctorName}\n" +
+                                        "Date: ${prescription.date}\n" +
+                                        "Medications: ${prescription.medications.joinToString(", ")}"
+                            )
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Prescription via"))
                     }
                 ) {
                     Icon(
@@ -196,6 +199,13 @@ fun PrescriptionCard(prescription: Prescription) {
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            // Medications text placed below the row with date and buttons
+            Text(
+                text = "Medications: ${prescription.medications.joinToString(", ")}",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
+
