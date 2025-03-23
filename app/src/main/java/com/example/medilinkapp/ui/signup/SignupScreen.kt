@@ -1,19 +1,29 @@
 package com.example.medilinkapp.ui.screens.signup
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonDefaults.buttonColors
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +31,9 @@ import androidx.navigation.NavController
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,10 +42,14 @@ fun SignupScreen(navController: NavController) {
     val fullName = remember { mutableStateOf("") }
     val email = remember { mutableStateOf("") }
     val phone = remember { mutableStateOf("") }
-    val dob = remember { mutableStateOf("") }      // Date of Birth as MM/DD/YYYY
-    val gender = remember { mutableStateOf("") }     // e.g., "Male", "Female", etc.
+    val dob = remember { mutableStateOf("") }      // Will be set via date picker
+    val gender = remember { mutableStateOf("") }     // Selected gender from dropdown
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
+
+    // Additional state for gender dropdown
+    val genderOptions = listOf("Male", "Female", "Other")
+    var expanded by remember { mutableStateOf(false) }
 
     // State for error messages and loading
     val errorMessage = remember { mutableStateOf("") }
@@ -41,6 +58,22 @@ fun SignupScreen(navController: NavController) {
     // Firebase instances
     val firebaseAuth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
+
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+
+    // Date Picker Dialog setup with a calendar icon
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            // Format month and day with leading zeros if needed
+            dob.value = String.format("%02d/%02d/%04d", month + 1, dayOfMonth, year)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
 
     MedilinkAppTheme {
         Scaffold(
@@ -92,6 +125,8 @@ fun SignupScreen(navController: NavController) {
                         label = { Text("Full Name", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
                             focusedBorderColor = Color.Gray,
@@ -107,6 +142,8 @@ fun SignupScreen(navController: NavController) {
                         label = { Text("Email", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
                             focusedBorderColor = Color.Gray,
@@ -122,6 +159,8 @@ fun SignupScreen(navController: NavController) {
                         label = { Text("Phone Number", style = TextStyle(fontFamily = FontFamily.Serif)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
                             focusedBorderColor = Color.Gray,
@@ -130,13 +169,26 @@ fun SignupScreen(navController: NavController) {
                         )
                     )
 
-                    // Date of Birth Field
+                    // Date of Birth Field with Calendar Icon
                     OutlinedTextField(
                         value = dob.value,
-                        onValueChange = { dob.value = it },
-                        label = { Text("Date of Birth (MM/DD/YYYY)", style = TextStyle(fontFamily = FontFamily.Serif)) },
-                        modifier = Modifier.fillMaxWidth(),
+                        onValueChange = { /* Read-only */ },
+                        label = { Text("Date of Birth", style = TextStyle(fontFamily = FontFamily.Serif)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { datePickerDialog.show() },
+                        readOnly = true,
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                        trailingIcon = {
+                            IconButton(onClick = { datePickerDialog.show() }) {
+                                Icon(
+                                    imageVector = Icons.Filled.DateRange,
+                                    contentDescription = "Select Date"
+                                )
+                            }
+                        },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
                             focusedBorderColor = Color.Gray,
@@ -145,20 +197,43 @@ fun SignupScreen(navController: NavController) {
                         )
                     )
 
-                    // Gender Field
-                    OutlinedTextField(
-                        value = gender.value,
-                        onValueChange = { gender.value = it },
-                        label = { Text("Gender", style = TextStyle(fontFamily = FontFamily.Serif)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color.White,
-                            focusedBorderColor = Color.Gray,
-                            unfocusedBorderColor = Color.LightGray,
-                            cursorColor = Color.Black
+                    // Gender Dropdown using ExposedDropdownMenuBox
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        OutlinedTextField(
+                            value = gender.value,
+                            onValueChange = { /* Read-only */ },
+                            readOnly = true,
+                            label = { Text("Gender", style = TextStyle(fontFamily = FontFamily.Serif)) },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = Color.White,
+                                focusedBorderColor = Color.Gray,
+                                unfocusedBorderColor = Color.LightGray,
+                                cursorColor = Color.Black
+                            ),
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            genderOptions.forEach { selectionOption ->
+                                DropdownMenuItem(
+                                    text = { Text(selectionOption, style = TextStyle(fontFamily = FontFamily.Serif)) },
+                                    onClick = {
+                                        gender.value = selectionOption
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
 
                     // Password Field
                     OutlinedTextField(
@@ -168,6 +243,8 @@ fun SignupScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                        keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
                             focusedBorderColor = Color.Gray,
@@ -184,6 +261,8 @@ fun SignupScreen(navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White,
                             focusedBorderColor = Color.Gray,

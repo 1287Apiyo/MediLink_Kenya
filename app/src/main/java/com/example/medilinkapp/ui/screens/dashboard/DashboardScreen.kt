@@ -31,18 +31,50 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
-// Custom FontFamily for Times New Roman
+// Custom FontFamily for Times New Roman (using Serif as a proxy)
 val timesNewRoman = FontFamily.Serif
+
 @Composable
 fun DashboardScreen(navController: NavController) {
+    // Firebase instances
+    val firebaseAuth = FirebaseAuth.getInstance()
+    val firestore = FirebaseFirestore.getInstance()
+
+    // State for user's full name
+    var userName by remember { mutableStateOf("User") }
+    var isNameLoading by remember { mutableStateOf(true) }
+
+    // Fetch user name from Firestore when the composable is first launched
+    LaunchedEffect(firebaseAuth.currentUser?.uid) {
+        val uid = firebaseAuth.currentUser?.uid
+        if (uid != null) {
+            firestore.collection("users").document(uid).get()
+                .addOnSuccessListener { documentSnapshot ->
+                    userName = documentSnapshot.getString("fullName") ?: "User"
+                    isNameLoading = false
+                }
+                .addOnFailureListener {
+                    isNameLoading = false
+                }
+        } else {
+            isNameLoading = false
+        }
+    }
+
     MedilinkAppTheme {
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
@@ -64,7 +96,7 @@ fun DashboardScreen(navController: NavController) {
                             Box(
                                 modifier = Modifier
                                     .size(64.dp)
-                                    .clip(CircleShape)
+                                    .clip(MaterialTheme.shapes.small)
                                     .background(Color.White.copy(alpha = 0.3f))
                                     .padding(4.dp),
                                 contentAlignment = Alignment.Center
@@ -79,7 +111,7 @@ fun DashboardScreen(navController: NavController) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    "Welcome Back, Anne",
+                                    text = if (isNameLoading) "Welcome Back" else "Welcome Back, $userName",
                                     style = TextStyle(
                                         fontFamily = timesNewRoman,
                                         fontWeight = FontWeight.Bold,
@@ -88,7 +120,7 @@ fun DashboardScreen(navController: NavController) {
                                     )
                                 )
                                 Text(
-                                    "Your Health, Our Priority",
+                                    text = "Your Health, Our Priority",
                                     style = TextStyle(
                                         fontFamily = timesNewRoman,
                                         fontSize = 16.sp,
@@ -99,7 +131,6 @@ fun DashboardScreen(navController: NavController) {
                         }
                     }
                 }
-
                 item {
                     // Quick Access Section
                     Spacer(modifier = Modifier.height(12.dp))
