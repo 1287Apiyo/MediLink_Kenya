@@ -34,7 +34,7 @@ fun SignupScreen(navController: NavController) {
     val password = remember { mutableStateOf("") }
     val confirmPassword = remember { mutableStateOf("") }
 
-    // State for error messages
+    // State for error messages and loading
     val errorMessage = remember { mutableStateOf("") }
     val isLoading = remember { mutableStateOf(false) }
 
@@ -50,9 +50,9 @@ fun SignupScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White)
-                    .padding(paddingValues),
-                contentAlignment = Alignment.TopCenter
+                    .padding(paddingValues)
             ) {
+                // Main content scrollable column
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -198,7 +198,7 @@ fun SignupScreen(navController: NavController) {
                             // Clear previous error
                             errorMessage.value = ""
 
-                            // Simple validation check for passwords match
+                            // Simple validation check for password match
                             if (password.value != confirmPassword.value) {
                                 errorMessage.value = "Passwords do not match"
                                 return@Button
@@ -267,6 +267,18 @@ fun SignupScreen(navController: NavController) {
                                 fontSize = 18.sp
                             )
                         )
+                    }
+                }
+
+                // Full-screen loading overlay when isLoading is true
+                if (isLoading.value) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
