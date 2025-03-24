@@ -94,7 +94,7 @@ fun DashboardScreen(navController: NavController) {
                             Box(
                                 modifier = Modifier
                                     .size(64.dp)
-                                    .clip(MaterialTheme.shapes.small)
+                                    .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.3f))
                                     .padding(4.dp),
                                 contentAlignment = Alignment.Center
@@ -106,17 +106,41 @@ fun DashboardScreen(navController: NavController) {
                                     modifier = Modifier.size(50.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
-                                Text(
-                                    text = if (isNameLoading) "Welcome Back" else "$greeting, $userName",
-                                    style = TextStyle(
-                                        fontFamily = timesNewRoman,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        color = Color.White
+                                if (isNameLoading) {
+                                    Text(
+                                        text = "Welcome Back",
+                                        style = TextStyle(
+                                            fontFamily = timesNewRoman,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = Color.White
+                                        )
                                     )
-                                )
+                                } else {
+                                    Text(
+                                        text = greeting,
+                                        style = TextStyle(
+                                            fontFamily = timesNewRoman,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = Color.White
+                                        )
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = userName,
+                                        style = TextStyle(
+                                            fontFamily = timesNewRoman,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            color = Color.White
+                                        )
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "Your Health, Our Priority",
                                     style = TextStyle(
@@ -129,6 +153,7 @@ fun DashboardScreen(navController: NavController) {
                         }
                     }
                 }
+
                 item {
                     // Quick Access Section
                     Spacer(modifier = Modifier.height(12.dp))
