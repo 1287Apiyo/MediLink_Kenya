@@ -3,47 +3,37 @@ package com.example.medilinkapp.ui.screens.dashboard
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.medilinkapp.R
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.util.Calendar
 
 // Custom FontFamily for Times New Roman (using Serif as a proxy)
 val timesNewRoman = FontFamily.Serif
@@ -57,6 +47,14 @@ fun DashboardScreen(navController: NavController) {
     // State for user's full name
     var userName by remember { mutableStateOf("User") }
     var isNameLoading by remember { mutableStateOf(true) }
+
+    // Compute greeting based on current hour.
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    val greeting = when (hour) {
+        in 0..11 -> "Good Morning"
+        in 12..17 -> "Good Afternoon"
+        else -> "Good Evening"
+    }
 
     // Fetch user name from Firestore when the composable is first launched
     LaunchedEffect(firebaseAuth.currentUser?.uid) {
@@ -111,7 +109,7 @@ fun DashboardScreen(navController: NavController) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = if (isNameLoading) "Welcome Back" else "Welcome Back, $userName",
+                                    text = if (isNameLoading) "Welcome Back" else "$greeting, $userName",
                                     style = TextStyle(
                                         fontFamily = timesNewRoman,
                                         fontWeight = FontWeight.Bold,
@@ -164,16 +162,16 @@ fun DashboardScreen(navController: NavController) {
                         Text(
                             "Featured Services",
                             style = MaterialTheme.typography.titleMedium.copy(
-                                fontFamily = FontFamily.Serif, // Times New Roman
+                                fontFamily = FontFamily.Serif,
                                 fontWeight = FontWeight.Bold
                             )
                         )
-
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
+                        Spacer(modifier = Modifier.height(20.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 ServiceCard(
                                     imageRes = R.drawable.symp,
                                     title = "AI Symptom Checker",
@@ -186,20 +184,21 @@ fun DashboardScreen(navController: NavController) {
                                     title = "E-Prescriptions",
                                     description = "Get digital prescriptions from doctors for easy access.",
                                     modifier = Modifier.weight(1f),
-                                    onClick = { navController.navigate("prescriptions") } // ✅ Add this line
+                                    onClick = { navController.navigate("prescriptions") }
                                 )
-
                             }
                             Spacer(modifier = Modifier.height(12.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
                                 ServiceCard(
                                     imageRes = R.drawable.pharm,
                                     title = "Pharmacy Services",
                                     description = "Order and receive prescribed medications hassle-free.",
                                     modifier = Modifier.weight(1f),
-                                    onClick = { navController.navigate("pharmacy") } // Add navigation
+                                    onClick = { navController.navigate("pharmacy") }
                                 )
-
                                 ServiceCard(
                                     imageRes = R.drawable.rec,
                                     title = "Health Records",
@@ -207,7 +206,6 @@ fun DashboardScreen(navController: NavController) {
                                     modifier = Modifier.weight(1f),
                                     onClick = { navController.navigate("health_records") }
                                 )
-
                             }
                         }
                     }
@@ -220,7 +218,6 @@ fun DashboardScreen(navController: NavController) {
 @Composable
 fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
     val interactionSource = remember { MutableInteractionSource() }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(12.dp)
@@ -230,11 +227,8 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
                 .shadow(elevation = 8.dp, shape = CircleShape, clip = false)
                 .size(64.dp)
                 .clip(CircleShape)
-                // Solid white background for a clean glass look
                 .background(Color.White)
-                // A light border for a defined edge
                 .border(width = 1.dp, color = Color.Black, shape = CircleShape)
-                // Circular ripple effect on click
                 .clickable(
                     interactionSource = interactionSource,
                     indication = rememberRipple(bounded = true, radius = 32.dp, color = Color.LightGray)
@@ -242,7 +236,6 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
                 .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Subtle glossy overlay for a glass-like finish
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -256,7 +249,6 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
                         shape = CircleShape
                     )
             )
-            // Icon placed on top
             when (icon) {
                 is ImageVector -> Icon(
                     imageVector = icon,
@@ -285,8 +277,6 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
         )
     }
 }
-
-
 
 @Composable
 fun ServiceCard(
@@ -342,8 +332,6 @@ fun ServiceCard(
         }
     }
 }
-
-
 
 @Composable
 @Preview(showBackground = true)
