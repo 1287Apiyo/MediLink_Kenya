@@ -25,20 +25,25 @@ import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.signup.SignupScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavGraph(context: Context) {
     val navController = rememberNavController()
+    // Determine the start destination:
+    // If a user is logged in, start at "dashboard"; otherwise start at "welcome".
+    val startDestination = if (FirebaseAuth.getInstance().currentUser != null) "dashboard" else "welcome"
+
     // Example state for HealthMonitoringScreen (if needed)
     val stepCount = remember { mutableStateOf(0) }
 
-    NavHost(navController = navController, startDestination = "welcome") {
-        // Welcome screen
+    NavHost(navController = navController, startDestination = startDestination) {
+        // Welcome screen (only shown when not logged in)
         composable("welcome") { WelcomeScreen(navController) }
-        // Authentication routes
+        // Authentication routes (only shown when not logged in)
         composable("login") { LoginScreen(navController) }
         composable("signup") { SignupScreen(navController) }
-        // Main app routes
+        // Main app routes (for logged in users)
         composable("dashboard") { DashboardScreen(navController) }
         composable("consultation") { ConsultationScreen(navController) }
         composable("appointments") { AppointmentHistoryScreen(navController) }
