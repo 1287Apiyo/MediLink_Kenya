@@ -18,6 +18,7 @@ import com.example.medilinkapp.ui.screens.dashboard.DashboardScreen
 import com.example.medilinkapp.ui.screens.healthmonitoring.HealthMonitoringScreen
 import com.example.medilinkapp.ui.screens.healthrecords.HealthRecordsScreen
 import com.example.medilinkapp.ui.screens.login.LoginScreen
+import com.example.medilinkapp.ui.screens.maps.MapScreen
 import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
 import com.example.medilinkapp.ui.screens.prescriptions.PrescriptionsScreen
 import com.example.medilinkapp.ui.screens.profile.ProfileScreen
@@ -48,6 +49,19 @@ fun AppNavGraph(context: Context) {
         composable("pharmacy") { PharmacyScreen(navController) }
         // New Health Records route
         composable("health_records") { HealthRecordsScreen(navController) }
+        // Map Screen with an optional activity argument
+        composable(
+            route = "map_screen?activity={activity}",
+            arguments = listOf(
+                navArgument("activity") {
+                    type = NavType.StringType
+                    defaultValue = "running"
+                }
+            )
+        ) { backStackEntry ->
+            val activity = backStackEntry.arguments?.getString("activity") ?: "running"
+            MapScreen(navController = navController, activity = activity)
+        }
         // Routes with parameters
         composable(
             route = "videoCallScreen/{doctorName}",

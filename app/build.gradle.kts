@@ -101,6 +101,9 @@ dependencies {
 
     // Other dependencies...
     implementation ("androidx.core:core-splashscreen:1.0.0")
+    implementation( "com.google.maps.android:maps-compose:6.1.0" )// Check for the latest version
+    implementation ("com.google.android.gms:play-services-maps:19.1.0")
+    implementation ("androidx.compose.ui:ui:1.7.8")
 
 
 

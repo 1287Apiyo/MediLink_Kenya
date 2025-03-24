@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.StepCounterSensor
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,12 +72,13 @@ fun HealthMonitoringScreen(
             )
         }
     ) { paddingValues ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(Color.White)
-            .padding(paddingValues)
-            .padding(16.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .background(Color.White)
+                .padding(paddingValues)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -115,7 +117,7 @@ fun HealthMonitoringScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                     },
-                    extraText = if (stepGoal != null) "Goal: $stepGoal" else "No Goal",
+                    extraText = if (stepGoal != 0) "Goal: $stepGoal" else "No Goal",
                     actionButton = {
                         TextButton(onClick = { showStepGoalDialog = true }) {
                             Text("Set Goal")
@@ -129,7 +131,7 @@ fun HealthMonitoringScreen(
             }
             // Congratulatory messages.
             AnimatedVisibility(
-                visible = (stepGoal != null && stepCount.value >= stepGoal!!),
+                visible = (stepGoal != 0 && stepCount.value >= stepGoal),
                 enter = fadeIn()
             ) {
                 Row(
@@ -170,23 +172,22 @@ fun HealthMonitoringScreen(
             ActivitySelectionSection(navController = navController)
             // Graph Section: Bar Chart.
             Text("Daily Steps Bar Chart", fontFamily = FontFamily.Serif, fontSize = 20.sp)
-            WeeklyStepsBarChart(
-                stepData = listOf(
-                    "Mon" to 4000,
-                    "Tue" to 6500,
-                    "Wed" to 8000,
-                    "Thu" to 7500,
-                    "Fri" to 9000,
-                    "Sat" to 8500,
-                    "Sun" to stepCount.value // Today’s steps
-                )
-            )
+            val daysOfWeek = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+            val todayIndex = Calendar.getInstance().get(Calendar.DAY_OF_WEEK) - 1
+
+            // Rearrange steps data based on today
+            val stepDataList = listOf(4000, 6500, 8000, 7500, 9000, 8500, stepCount.value)
+            val orderedSteps = daysOfWeek.mapIndexed { index, day ->
+                day to if (index == todayIndex) stepCount.value else stepDataList[index]
+            }
+
+            WeeklyStepsBarChart(stepData = orderedSteps)
         }
     }
 
     // Step Goal Dialog.
     if (showStepGoalDialog) {
-        var tempGoal by remember { mutableStateOf(stepGoal?.toString() ?: "") }
+        var tempGoal by remember { mutableStateOf(stepGoal.toString()) }
         AlertDialog(
             onDismissRequest = { showStepGoalDialog = false },
             title = { Text("Enter Daily Step Goal") },
