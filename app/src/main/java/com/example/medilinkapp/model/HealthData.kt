@@ -1,8 +1,8 @@
 package com.example.medilinkapp.model
 
 data class HealthData(
-    val userId: String = "",
+    val stepGoal: Int? = null,
+    val waterIntake: Int = 0,
     val steps: Int = 0,
-    val heartRate: Int = 0,
-    val sleepHours: Float = 0f
+    val timestamp: Long = System.currentTimeMillis()
 )

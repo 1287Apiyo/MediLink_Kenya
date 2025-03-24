@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.StepCounterSensor
 
@@ -34,18 +35,27 @@ import com.example.medilinkapp.ui.components.StepCounterSensor
 @Composable
 fun HealthMonitoringScreen(
     navController: NavController,
-    stepCount: MutableState<Int>
+    stepCount: MutableState<Int>,
+    viewModel: HealthMonitoringViewModel = viewModel()
 ) {
-    // Update stepCount using your sensor.
+    // Use sensor to update step count.
     StepCounterSensor(stepCount = stepCount)
 
-    // Local state for step goal (for steps card).
-    var stepGoal by rememberSaveable { mutableStateOf<Int?>(null) }
-    // Water intake state.
-    var waterIntake by rememberSaveable { mutableStateOf(0) }
-    // Dialog state for setting step goal.
+    // Local UI states for dialogs.
     var showStepGoalDialog by remember { mutableStateOf(false) }
 
+    // Observe Firebase health data via the ViewModel.
+    val healthData by viewModel.healthData.collectAsState()
+
+    // Extract values safely
+    val stepGoal = healthData.stepGoal ?: 0
+    val waterIntake = healthData.waterIntake
+    val steps = healthData.steps
+
+    // Ensure Firebase updates when step count changes
+    LaunchedEffect(stepCount.value) {
+        viewModel.updateSteps(stepCount.value)
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -70,7 +80,7 @@ fun HealthMonitoringScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header Section: Daily Summary Banner.
+            // Header Section.
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "Daily Health Summary",
@@ -114,7 +124,7 @@ fun HealthMonitoringScreen(
                 )
                 WaterIntakeCard(
                     waterIntake = waterIntake,
-                    onAddWater = { if (waterIntake < 2000) waterIntake += 250 }
+                    onAddWater = { if (waterIntake < 2000) viewModel.updateWaterIntake(waterIntake + 250) }
                 )
             }
             // Congratulatory messages.
@@ -158,7 +168,7 @@ fun HealthMonitoringScreen(
             }
             // Activity Section.
             ActivitySelectionSection(navController = navController)
-            // Graph Section: Using a bar chart placeholder.
+            // Graph Section: Bar Chart.
             Text("Daily Steps Bar Chart", fontFamily = FontFamily.Serif, fontSize = 20.sp)
             WeeklyStepsBarChart(
                 stepData = listOf(
@@ -190,7 +200,7 @@ fun HealthMonitoringScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    stepGoal = tempGoal.toIntOrNull()
+                    tempGoal.toIntOrNull()?.let { viewModel.updateStepGoal(it) }
                     showStepGoalDialog = false
                 }) {
                     Text("OK")
@@ -207,7 +217,7 @@ fun HealthMonitoringScreen(
 
 @Composable
 fun WeeklyStepsBarChart(stepData: List<Pair<String, Int>>) {
-    val primaryColor = MaterialTheme.colorScheme.primary  // Store outside Canvas lambda.
+    val primaryColor = MaterialTheme.colorScheme.primary
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -224,7 +234,7 @@ fun WeeklyStepsBarChart(stepData: List<Pair<String, Int>>) {
                 val barHeight = if (maxSteps > 0) (steps / maxSteps) * canvasHeight else 0f
                 val x = index * 2 * barWidth + barWidth / 2
                 drawRect(
-                    color = primaryColor, // Use the stored value.
+                    color = primaryColor,
                     topLeft = Offset(x, canvasHeight - barHeight),
                     size = androidx.compose.ui.geometry.Size(barWidth, barHeight)
                 )
@@ -242,7 +252,6 @@ fun WeeklyStepsBarChart(stepData: List<Pair<String, Int>>) {
         }
     }
 }
-
 
 @Composable
 fun MetricCard(
@@ -282,7 +291,6 @@ fun MetricCard(
 
 @Composable
 fun WaterIntakeCard(waterIntake: Int, onAddWater: () -> Unit) {
-    // The card background simulates an empty glass.
     Card(
         modifier = Modifier
             .width(200.dp)
@@ -292,9 +300,7 @@ fun WaterIntakeCard(waterIntake: Int, onAddWater: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Calculate the fraction of the glass filled (max = 2000 mL).
             val fillFraction = (waterIntake / 2000f).coerceIn(0f, 1f)
-            // The filled portion is drawn as a Box aligned to the bottom.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -302,32 +308,16 @@ fun WaterIntakeCard(waterIntake: Int, onAddWater: () -> Unit) {
                     .background(Color.Cyan)
                     .align(Alignment.BottomCenter)
             )
-            // Center text displaying the water amount.
             Column(
                 modifier = Modifier.align(Alignment.Center),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "$waterIntake mL",
-                    fontFamily = FontFamily.Serif,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black
-                )
-                Text(
-                    text = "Water Intake",
-                    fontFamily = FontFamily.Serif,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Black
-                )
+                Text(text = "$waterIntake mL", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.titleMedium, color = Color.Black)
+                Text(text = "Water Intake", fontFamily = FontFamily.Serif, style = MaterialTheme.typography.bodySmall, color = Color.Black)
             }
-            // Plus button at the top-right to add water.
             Box(modifier = Modifier.align(Alignment.TopEnd)) {
                 IconButton(onClick = onAddWater) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "Add Water",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Water", tint = MaterialTheme.colorScheme.primary)
                 }
             }
         }

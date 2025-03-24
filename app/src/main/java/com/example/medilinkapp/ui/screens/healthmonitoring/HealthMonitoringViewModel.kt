@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.medilinkapp.model.HealthData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,61 +15,56 @@ class HealthMonitoringViewModel(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // StateFlow for the cumulative steps loaded from Firebase.
-    private val _cumulativeSteps = MutableStateFlow(0)
-    val cumulativeSteps: StateFlow<Int> = _cumulativeSteps
+    // StateFlow to hold HealthData
+    private val _healthData = MutableStateFlow(HealthData())
+    val healthData: StateFlow<HealthData> get() = _healthData
 
-    // We'll store the session's baseline sensor count in the ViewModel so it persists.
-    var sessionStartSteps: Int = 0
-
-    // Get the current user ID (ensure you have persistent authentication)
     private val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "anonymous"
 
-    // Reference to the cumulative health data node.
-    private val cumulativeRef: DatabaseReference =
-        FirebaseDatabase.getInstance().getReference("users").child(userId).child("cumulativeHealthData")
+    // Reference to a health data node in Firebase Realtime Database.
+    private val dbRef: DatabaseReference = FirebaseDatabase.getInstance()
+        .getReference("users")
+        .child(userId)
+        .child("healthData")
 
     init {
-        // Listen to Firebase and update _cumulativeSteps.
-        cumulativeRef.child("steps").addValueEventListener(object : ValueEventListener {
+        // Listen for realtime changes to update our state.
+        dbRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                _cumulativeSteps.value = snapshot.getValue(Int::class.java) ?: 0
+                val data = snapshot.getValue(HealthData::class.java) ?: HealthData()
+                _healthData.value = data
             }
+
             override fun onCancelled(error: DatabaseError) {
-                Log.w("RealtimeDB", "Failed to read cumulative steps", error.toException())
+                Log.w("RealtimeDB", "Failed to read health data.", error.toException())
             }
         })
     }
 
-    /**
-     * Call this to update Firebase with new cumulative data.
-     * @param currentSensorSteps: the latest sensor reading
-     * @param heartRate: latest heart rate
-     * @param sleepHours: computed sleep hours
-     */
-    fun updateCumulativeData(currentSensorSteps: Int, heartRate: Int, sleepHours: Float) {
-        // Calculate new steps: existing cumulative + steps taken during this session.
-        val sessionIncrement = currentSensorSteps - sessionStartSteps
-        val newCumulativeSteps = _cumulativeSteps.value + sessionIncrement
+    // ✅ Function to update step goal
+    fun updateStepGoal(newGoal: Int) {
+        val updatedData = _healthData.value.copy(stepGoal = newGoal)
+        updateHealthData(updatedData)
+    }
 
-        val healthData = mapOf(
-            "steps" to newCumulativeSteps,
-            "heartRate" to heartRate,
-            "sleepHours" to sleepHours,
-            "timestamp" to System.currentTimeMillis()
-        )
+    // ✅ Function to update water intake
+    fun updateWaterIntake(newIntake: Int) {
+        val updatedData = _healthData.value.copy(waterIntake = newIntake)
+        updateHealthData(updatedData)
+    }
 
+    // ✅ Function to update steps
+    fun updateSteps(newSteps: Int) {
+        val updatedData = _healthData.value.copy(steps = newSteps)
+        updateHealthData(updatedData)
+    }
+
+    // ✅ Function to update the whole health data in Firebase
+    private fun updateHealthData(newData: HealthData) {
         viewModelScope.launch {
-            cumulativeRef.setValue(healthData)
-                .addOnSuccessListener {
-                    Log.d("RealtimeDB", "Cumulative data updated!")
-                    _cumulativeSteps.value = newCumulativeSteps
-                    // Reset the baseline for future sessions.
-                    sessionStartSteps = currentSensorSteps
-                }
-                .addOnFailureListener { error ->
-                    Log.w("RealtimeDB", "Error updating cumulative data", error)
-                }
+            dbRef.setValue(newData)
+                .addOnSuccessListener { Log.d("RealtimeDB", "Health data updated!") }
+                .addOnFailureListener { error -> Log.w("RealtimeDB", "Error updating health data", error) }
         }
     }
 }
