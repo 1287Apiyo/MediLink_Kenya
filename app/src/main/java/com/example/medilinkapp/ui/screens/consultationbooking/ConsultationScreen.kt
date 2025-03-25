@@ -51,9 +51,9 @@ fun ConsultationScreen(navController: NavController) {
                 doctors = repository.getDoctors().map { doctor ->
                     doctor.copy(
                         drawableId = when (doctor.name) {
-                            "Dr. Sharon" -> R.drawable.doctor1
-                            "Dr. Kimani" -> R.drawable.doctor2
-                            "Dr. Alice" -> R.drawable.doctor3
+                            "Dr Sharon" -> R.drawable.doctor1
+                            "Dr Kimani" -> R.drawable.doctor2
+                            "Dr Muli" -> R.drawable.doctor3
                             else -> R.drawable.doctor2 // Ensure non-null fallback image
                         }
                     )
