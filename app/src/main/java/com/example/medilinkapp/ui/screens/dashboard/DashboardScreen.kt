@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.medilinkapp.R
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Calendar
@@ -40,6 +41,13 @@ val timesNewRoman = FontFamily.Serif
 
 @Composable
 fun DashboardScreen(navController: NavController) {
+    val systemUiController = rememberSystemUiController()
+    val statusBarColor = Color(0xFF1A237E) // Change this to your preferred color
+
+    // Set the status bar color
+    SideEffect {
+        systemUiController.setStatusBarColor(color = statusBarColor)
+    }
     // Firebase instances
     val firebaseAuth = FirebaseAuth.getInstance()
     val firestore = FirebaseFirestore.getInstance()
@@ -200,14 +208,14 @@ fun DashboardScreen(navController: NavController) {
                                 ServiceCard(
                                     imageRes = R.drawable.symp,
                                     title = "AI Symptom Checker",
-                                    description = "Instantly assess your symptoms with AI-powered insights.",
+                                    description = "Instantly assess your symptoms ",
                                     modifier = Modifier.weight(1f),
                                     onClick = { navController.navigate("symptom_checker") }
                                 )
                                 ServiceCard(
                                     imageRes = R.drawable.presc,
                                     title = "E-Prescriptions",
-                                    description = "Get digital prescriptions from doctors for easy access.",
+                                    description = "Get digital prescriptions from doctors",
                                     modifier = Modifier.weight(1f),
                                     onClick = { navController.navigate("prescriptions") }
                                 )
@@ -220,14 +228,14 @@ fun DashboardScreen(navController: NavController) {
                                 ServiceCard(
                                     imageRes = R.drawable.pharm,
                                     title = "Pharmacy Services",
-                                    description = "Order and receive prescribed medications hassle-free.",
+                                    description = "Order and receive prescribed medications ",
                                     modifier = Modifier.weight(1f),
                                     onClick = { navController.navigate("pharmacy") }
                                 )
                                 ServiceCard(
                                     imageRes = R.drawable.rec,
                                     title = "Health Records",
-                                    description = "Securely access and manage your health records anytime.",
+                                    description = "Securely access and manage your health records ",
                                     modifier = Modifier.weight(1f),
                                     onClick = { navController.navigate("health_records") }
                                 )

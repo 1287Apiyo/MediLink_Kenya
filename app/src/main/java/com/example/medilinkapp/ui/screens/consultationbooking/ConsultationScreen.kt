@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
+import com.example.medilinkapp.R
 import com.example.medilinkapp.model.Doctor
 import com.example.medilinkapp.repository.FirestoreRepository
 import kotlinx.coroutines.launch
@@ -46,7 +48,16 @@ fun ConsultationScreen(navController: NavController) {
     fun loadDoctors() {
         coroutineScope.launch {
             try {
-                doctors = repository.getDoctors()
+                doctors = repository.getDoctors().map { doctor ->
+                    doctor.copy(
+                        drawableId = when (doctor.name) {
+                            "Dr. Sharon" -> R.drawable.doctor1
+                            "Dr. Kimani" -> R.drawable.doctor2
+                            "Dr. Alice" -> R.drawable.doctor3
+                            else -> R.drawable.doctor2 // Ensure non-null fallback image
+                        }
+                    )
+                }
                 filteredDoctors = doctors
                 error = null
             } catch (e: Exception) {
@@ -56,6 +67,7 @@ fun ConsultationScreen(navController: NavController) {
             }
         }
     }
+
 
     LaunchedEffect(Unit) {
         loadDoctors()
@@ -208,7 +220,6 @@ fun SmallDoctorCard(
     onChat: () -> Unit,
     onBookAppointment: () -> Unit
 ) {
-    // Dummy values for rating and availability; replace with real data if available.
     val rating = 4.5f
     val isAvailable = true
 
@@ -230,13 +241,15 @@ fun SmallDoctorCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = doctor.drawableId),
+                painter = painterResource(id = doctor.drawableId ?: R.drawable.doctor2), // Ensure non-null value
                 contentDescription = "Doctor ${doctor.name}",
                 modifier = Modifier
                     .size(80.dp)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
+
+
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -263,7 +276,6 @@ fun SmallDoctorCard(
                     )
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                // Rating and Availability Row
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Star,
@@ -272,10 +284,7 @@ fun SmallDoctorCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = rating.toString(),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text(text = rating.toString(), style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
                         modifier = Modifier
@@ -306,7 +315,6 @@ fun SmallDoctorCard(
                         tint = MaterialTheme.colorScheme.secondary
                     )
                 }
-                // Updated Book Appointment Button:
                 Button(
                     onClick = onBookAppointment,
                     shape = RoundedCornerShape(4.dp),

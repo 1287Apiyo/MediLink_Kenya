@@ -106,6 +106,10 @@ dependencies {
     implementation ("com.google.android.gms:play-services-maps:19.1.0")
     implementation ("androidx.compose.ui:ui:1.7.8")
 
+    implementation("io.coil-kt:coil-compose:2.2.2")
+
+    implementation ( "com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+
 
 
 
