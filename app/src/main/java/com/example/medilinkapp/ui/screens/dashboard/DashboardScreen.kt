@@ -74,6 +74,7 @@ fun DashboardScreen(navController: NavController) {
                     isNameLoading = false
                 }
                 .addOnFailureListener {
+                    isNameLoading = false
                 }
         } else {
             isNameLoading = false
