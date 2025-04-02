@@ -1,4 +1,4 @@
-package com.example.medilinkapp
+ package com.example.medilinkapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
