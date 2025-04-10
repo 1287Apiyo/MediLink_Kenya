@@ -15,6 +15,6 @@ class MainActivity : ComponentActivity() {
             MedilinkAppTheme {
                 AppNavGraph(context = this)
             }
-        }
+        } 
     }
 }
