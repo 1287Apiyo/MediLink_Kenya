@@ -68,8 +68,8 @@ fun HealthMonitoringScreen(
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
-            )
+                colors = TopAppBarDefaults.topAppBarColors(  containerColor = Color(0xFF1A237E)
+                ))
         }
     ) { paddingValues ->
         Column(modifier = Modifier

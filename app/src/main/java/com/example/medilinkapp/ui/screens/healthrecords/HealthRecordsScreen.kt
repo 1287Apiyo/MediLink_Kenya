@@ -70,7 +70,7 @@ fun HealthRecordsScreen(navController: NavController) {
                         )
                     },
                     colors = TopAppBarDefaults.mediumTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = Color(0xFF1A237E)
                     )
                 )
             },

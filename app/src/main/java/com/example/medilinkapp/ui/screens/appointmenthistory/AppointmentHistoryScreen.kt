@@ -81,8 +81,9 @@ fun AppointmentHistoryScreen(navController: NavController) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF1A237E)
                 )
+
             )
         }
     ) { paddingValues ->
