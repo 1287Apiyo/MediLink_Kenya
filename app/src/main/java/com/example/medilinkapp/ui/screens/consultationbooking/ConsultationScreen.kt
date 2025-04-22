@@ -1,11 +1,14 @@
+// Full Kotlin file with enhanced functionality
+
 package com.example.medilinkapp.ui.screens.consultationbooking
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,17 +25,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.medilinkapp.R
 import com.example.medilinkapp.model.Doctor
 import com.example.medilinkapp.repository.FirestoreRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.round
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,19 +50,27 @@ fun ConsultationScreen(navController: NavController) {
     var filteredDoctors by remember { mutableStateOf(emptyList<Doctor>()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+
     var searchQuery by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf("All") }
+    var minRating by remember { mutableStateOf(3.5f) }
+
     val coroutineScope = rememberCoroutineScope()
+    val visible = remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
     fun loadDoctors() {
         coroutineScope.launch {
             try {
+                isRefreshing = true
+                delay(600)
                 doctors = repository.getDoctors().map { doctor ->
                     doctor.copy(
                         drawableId = when (doctor.name) {
                             "Dr Sharon" -> R.drawable.doctor1
                             "Dr Kimani" -> R.drawable.doctor2
                             "Dr Muli" -> R.drawable.doctor3
-                            else -> R.drawable.doctor2 // Ensure non-null fallback image
+                            else -> R.drawable.doctor2
                         }
                     )
                 }
@@ -64,20 +80,23 @@ fun ConsultationScreen(navController: NavController) {
                 error = e.message
             } finally {
                 isLoading = false
+                isRefreshing = false
             }
         }
     }
 
-
     LaunchedEffect(Unit) {
         loadDoctors()
+        visible.value = true
     }
 
-    LaunchedEffect(searchQuery, doctors) {
-        filteredDoctors = if (searchQuery.isBlank()) {
-            doctors
-        } else {
-            doctors.filter { it.name.contains(searchQuery, ignoreCase = true) }
+    LaunchedEffect(searchQuery, selectedType, minRating, doctors) {
+        filteredDoctors = doctors.filter {
+            val rating = Random.nextDouble(3.8, 5.0).toFloat()
+            val matchesName = it.name.contains(searchQuery, ignoreCase = true)
+            val matchesType = selectedType == "All" || it.specialization.equals(selectedType, ignoreCase = true)
+            val matchesRating = rating >= minRating
+            matchesName && matchesType && matchesRating
         }
     }
 
@@ -85,130 +104,161 @@ fun ConsultationScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Consult a Doctor",
-                        style = MaterialTheme.typography.titleLarge.copy(
+                    Column {
+                        Text("Consult a Doctor", style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             fontFamily = FontFamily.Serif,
                             color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    )
+                        ))
+                        Text("Expert help at your fingertips", style = MaterialTheme.typography.labelSmall.copy(
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                        ))
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onPrimary) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                        }
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF1A237E)
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
             )
         }
     ) { paddingValues ->
-        // Main container with a pure white background.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(paddingValues)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures { _, dragAmount ->
+                        if (dragAmount > 20) loadDoctors()
+                    }
+                }
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+            AnimatedVisibility(
+                visible = visible.value,
+                enter = fadeIn(tween(600)) + slideInVertically(
+                    initialOffsetY = { it / 4 },
+                    animationSpec = tween(600)
+                )
             ) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Get expert medical advice anytime, anywhere.",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onBackground,
-                        fontFamily = FontFamily.Serif
-                    )
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                // Search Bar
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = { Text("Search doctors", fontFamily = FontFamily.Serif) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "Available Doctors",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.Serif,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                when {
-                    isLoading -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Loading doctors...", style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            label = { Text("Search by name", fontFamily = FontFamily.Serif) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        DoctorTypeDropdown(selectedType) { selectedType = it }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text("Minimum Rating: ${round(minRating * 10) / 10}", fontFamily = FontFamily.Serif)
+                        Slider(
+                            value = minRating,
+                            onValueChange = { minRating = it },
+                            valueRange = 3.5f..5f,
+                            steps = 2
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Available Doctors", style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontFamily = FontFamily.Serif,
+                            color = MaterialTheme.colorScheme.secondary
+                        ))
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
-                    error != null -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    "Error: $error",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Button(onClick = {
-                                    isLoading = true
-                                    loadDoctors()
-                                }) {
-                                    Text("Retry")
-                                }
-                            }
-                        }
-                    }
-                    filteredDoctors.isEmpty() -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No doctors available.", style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
-                    else -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentPadding = PaddingValues(vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            items(filteredDoctors) { doctor ->
-                                AnimatedVisibility(
-                                    visible = true,
-                                    enter = fadeIn(animationSpec = tween(durationMillis = 500))
-                                ) {
-                                    SmallDoctorCard(
-                                        doctor = doctor,
-                                        onVideoCall = {
-                                            navController.navigate("videoCallScreen/${doctor.name}")
-                                        },
-                                        onChat = {
-                                            navController.navigate("chatScreen/${doctor.name}")
-                                        },
-                                        onBookAppointment = {
-                                            // Navigate to the appointment booking screen
-                                            navController.navigate("appointmentBookingScreen/${doctor.name}")
-                                        }
-                                    )
-                                }
-                            }
+
+                    when {
+                        isLoading -> item { LoadingState() }
+                        error != null -> item { ErrorState(error!!, onRetry = { isLoading = true; loadDoctors() }) }
+                        filteredDoctors.isEmpty() -> item { EmptyState() }
+                        else -> items(filteredDoctors) { doctor ->
+                            SmallDoctorCard(
+                                doctor = doctor,
+                                onVideoCall = { navController.navigate("videoCallScreen/${doctor.name}") },
+                                onChat = { navController.navigate("chatScreen/${doctor.name}") },
+                                onBookAppointment = { navController.navigate("appointmentBookingScreen/${doctor.name}") }
+                            )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(24.dp))
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DoctorTypeDropdown(selected: String, onSelected: (String) -> Unit) {
+    val types = listOf("All", "General", "Pediatrician", "Dentist", "Psychologist", "Dermatologist")
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+        OutlinedTextField(
+            value = selected,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Filter by specialization", fontFamily = FontFamily.Serif) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            types.forEach { type ->
+                DropdownMenuItem(
+                    text = { Text(type) },
+                    onClick = {
+                        onSelected(type)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingState() {
+    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Loading doctors...", style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+@Composable
+fun ErrorState(error: String, onRetry: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Error: $error", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = onRetry) {
+                Text("Retry")
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyState() {
+    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Filled.Star, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("No doctors available.", style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -220,117 +270,52 @@ fun SmallDoctorCard(
     onChat: () -> Unit,
     onBookAppointment: () -> Unit
 ) {
-    val rating = 4.5f
-    val isAvailable = true
+    val rating = remember { Random.nextDouble(3.8, 5.0).toFloat() }
+    val isAvailable = remember { Random.nextBoolean() }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable { onVideoCall() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .clickable { onVideoCall() }
+            .border(1.dp, Color.Black, RoundedCornerShape(8.dp)),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = doctor.drawableId ?: R.drawable.doctor2), // Ensure non-null value
-                contentDescription = "Doctor ${doctor.name}",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                painter = painterResource(id = doctor.drawableId ?: R.drawable.doctor2),
+                contentDescription = null,
+                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
-
-
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = doctor.name,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Serif
-                    )
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = doctor.specialization,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Serif,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = doctor.experience,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontFamily = FontFamily.Serif,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(doctor.name, style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Serif
+                ))
+                Text(doctor.specialization, style = MaterialTheme.typography.bodySmall)
+                Text(doctor.experience, style = MaterialTheme.typography.bodySmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = "Rating",
-                        tint = Color(0xFFFFC107),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(text = rating.toString(), style = MaterialTheme.typography.bodySmall)
+                    Icon(Icons.Filled.Star, contentDescription = "Rating", tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
+                    Text("$rating", style = MaterialTheme.typography.bodySmall)
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(if (isAvailable) Color.Green else Color.Red)
+                        modifier = Modifier.size(10.dp).clip(CircleShape).background(if (isAvailable) Color.Green else Color.Red)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = if (isAvailable) "Available" else "Busy",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text(if (isAvailable) "Available" else "Busy", style = MaterialTheme.typography.bodySmall)
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 IconButton(onClick = onVideoCall) {
-                    Icon(
-                        imageVector = Icons.Outlined.VideoCall,
-                        contentDescription = "Video Call",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(Icons.Outlined.VideoCall, contentDescription = "Video Call", tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onChat) {
-                    Icon(
-                        imageVector = Icons.Outlined.Chat,
-                        contentDescription = "Chat",
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
+                    Icon(Icons.Outlined.Chat, contentDescription = "Chat", tint = MaterialTheme.colorScheme.secondary)
                 }
-                Button(
-                    onClick = onBookAppointment,
-                    shape = RoundedCornerShape(4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 1.0f),
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "Book Appointment",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
+                Button(onClick = onBookAppointment, shape = RoundedCornerShape(4.dp), contentPadding = PaddingValues(4.dp)) {
+                    Text("Book", fontSize = 12.sp)
                 }
             }
         }

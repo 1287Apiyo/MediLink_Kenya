@@ -109,6 +109,9 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.2.2")
 
     implementation ( "com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation("androidx.compose.animation:animation:1.5.0") // or your current version
+    implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0") // Or latest version
+
 
 
 

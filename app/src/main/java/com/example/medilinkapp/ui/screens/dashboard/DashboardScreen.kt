@@ -1,5 +1,12 @@
 package com.example.medilinkapp.ui.screens.dashboard
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -14,9 +21,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -30,10 +39,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.medilinkapp.R
+import com.example.medilinkapp.ui.screens.healthmonitoring.SleekLoadingOverlay
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.delay
 import java.util.Calendar
 
 // Custom FontFamily for Times New Roman (using Serif as a proxy)
@@ -178,13 +189,14 @@ fun DashboardScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         QuickActionButton(R.drawable.consultation, "Consultation") {
-                            navController.navigate("consultation")
+                            navController.navigate("loading-consultation")
+
                         }
                         QuickActionButton(R.drawable.appointment, "Appointments") {
                             navController.navigate("appointments")
                         }
                         QuickActionButton(R.drawable.healthmon, "Monitoring") {
-                            navController.navigate("monitoring")
+                            navController.navigate("loading-monitoring")
                         }
                     }
                 }
@@ -247,6 +259,102 @@ fun DashboardScreen(navController: NavController) {
         }
     }
 }
+@Composable
+fun LoadingConsultationScreen(navController: NavController) {
+    LaunchedEffect(Unit) {
+        delay(1500L)
+        navController.navigate("consultation") {
+            popUpTo("loading-consultation") { inclusive = true }
+        }
+    }
+
+    val rotation = infiniteRotation()
+    val bounce = bounceEffect()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFFF4F0FA), Color.White)
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Animated icon container
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFE3DDF5))
+                    .shadow(8.dp, CircleShape)
+                    .padding(16.dp)
+                    .graphicsLayer {
+                        rotationZ = rotation
+                        translationY = bounce
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.consultation),
+                    contentDescription = "Loading Consultation",
+                    tint = Color(0xFFB19CD9),
+                    modifier = Modifier.size(50.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Hang tight!",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF4A4A4A)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Finding the best doctors for you...",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF757575)
+            )
+        }
+    }
+}
+
+@Composable
+fun infiniteRotation(): Float {
+    val infiniteTransition = rememberInfiniteTransition()
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing)
+        )
+    )
+    return angle
+}
+
+@Composable
+fun bounceEffect(): Float {
+    val infiniteTransition = rememberInfiniteTransition()
+    val offset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    return offset
+}
+
 
 @Composable
 fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
@@ -310,6 +418,19 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
         )
     }
 }
+@Composable
+fun MonitoringLoadingScreen(navController: NavController) {
+    LaunchedEffect(Unit) {
+        delay(2000) // duration of loading animation
+        navController.navigate("monitoring") {
+            popUpTo("loading-monitoring") { inclusive = true } // remove loader from backstack
+        }
+    }
+
+    // Show loading screen
+    SleekLoadingOverlay(show = true)
+}
+
 
 @Composable
 fun ServiceCard(

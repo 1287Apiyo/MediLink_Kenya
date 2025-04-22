@@ -1,6 +1,12 @@
 package com.example.medilinkapp.ui.screens.healthmonitoring
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -18,18 +24,20 @@ import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.medilinkapp.ui.components.StepCounterSensor
+import kotlinx.coroutines.delay
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +55,13 @@ fun HealthMonitoringScreen(
 
     // Observe Firebase health data via the ViewModel.
     val healthData by viewModel.healthData.collectAsState()
+    var showLoading by remember { mutableStateOf(true) }
+
+    // Simulate loading delay
+    LaunchedEffect(Unit) {
+        delay(1500) // Adjust duration as needed
+        showLoading = false
+    }
 
     // Extract values safely
     val stepGoal = healthData.stepGoal ?: 0
@@ -213,8 +228,45 @@ fun HealthMonitoringScreen(
                 }
             }
         )
+        SleekLoadingOverlay(show = showLoading)
+        }
+    }
+
+@Composable
+fun SleekLoadingOverlay(show: Boolean) {
+    if (show) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f))
+                .zIndex(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            val infiniteTransition = rememberInfiniteTransition(label = "loading-line")
+            val offsetX by infiniteTransition.animateFloat(
+                initialValue = -200f,
+                targetValue = 800f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart
+                ), label = "offsetX"
+            )
+
+            Canvas(modifier = Modifier.fillMaxWidth().height(4.dp)) {
+                drawLine(
+                    color = Color(0xFFE6E6FA), // Soft lilac
+
+                    start = Offset(offsetX, 0f),
+                    end = Offset(offsetX + 100f, 0f),
+                    strokeWidth = 6f,
+                    cap = StrokeCap.Round
+                )
+            }
+        }
     }
 }
+
+
 
 @Composable
 fun WeeklyStepsBarChart(stepData: List<Pair<String, Int>>) {
