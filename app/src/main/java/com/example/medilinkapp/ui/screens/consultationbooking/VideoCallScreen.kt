@@ -59,7 +59,7 @@ fun VideoCallScreen(navController: NavController, doctorName: String) {
 
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF1A237E)
                 )
             )
         },
@@ -175,7 +175,7 @@ fun ChatScreen(navController: NavController, doctorName: String) {
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF1A237E)
                 )
             )
         }

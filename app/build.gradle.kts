@@ -111,6 +111,10 @@ dependencies {
     implementation ( "com.google.accompanist:accompanist-systemuicontroller:0.30.1")
     implementation("androidx.compose.animation:animation:1.5.0") // or your current version
     implementation("com.google.accompanist:accompanist-navigation-animation:0.34.0") // Or latest version
+    implementation("androidx.compose.material3:material3:1.2.0")
+    implementation("androidx.activity:activity-compose:1.7.2")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.30.1")
+    implementation("com.airbnb.android:lottie-compose:6.0.0")
 
 
 
