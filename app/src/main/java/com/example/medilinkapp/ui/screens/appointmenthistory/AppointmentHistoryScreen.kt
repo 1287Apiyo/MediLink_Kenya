@@ -59,7 +59,7 @@ fun AppointmentHistoryScreen(navController: NavController) {
         onDispose { listenerRegistration?.remove() }
     }
 
-    // Group appointments by status.
+    // Group appointments by status
     val upcomingAppointments = appointments.filter { it.status == "upcoming" }
     val pastAppointments = appointments.filter { it.status == "past" }
 
