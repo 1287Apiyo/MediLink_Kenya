@@ -1,5 +1,8 @@
+package com.example.medilinkapp.viewmodel
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.medilinkapp.model.Doctor
@@ -7,8 +10,6 @@ import com.example.medilinkapp.repository.FirestoreRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import java.util.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 
 
 class ConsultationViewModel : ViewModel() {
@@ -62,7 +63,7 @@ class ConsultationViewModel : ViewModel() {
                 firestore.collection("consultation_requests")
                     .add(consultationData)
                     .addOnSuccessListener {
-                        successMessage = "Consultation with Dr. ${selectedDoctor!!.name} confirmed and saved!"
+                        successMessage = "Consultation with Dr. ${selectedDoctor!!.name} confirmed!"
                     }
                     .addOnFailureListener {
                         errorMessage = "Failed to save request. Try again."

@@ -1,30 +1,15 @@
 package com.example.medilinkapp.ui.screens.consultationbooking
 
-import ConsultationViewModel
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.medilinkapp.viewmodel.ConsultationViewModel
 import java.util.*
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -46,6 +32,12 @@ fun ConsultationScreen(
 ) {
     var showConfirmationDialog by remember { mutableStateOf(false) }
 
+    // React to changes in successMessage
+    LaunchedEffect(viewModel.successMessage) {
+        if (viewModel.successMessage.isNotEmpty()) {
+            showConfirmationDialog = true
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,82 +45,53 @@ fun ConsultationScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
-        Box(
+        Text(
+            text = "Book a Consultation",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.primary)
-                .padding(vertical = 24.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Book a Consultation",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
+                .padding(16.dp),
+            color = MaterialTheme.colorScheme.onPrimary
+        )
 
         // Category Selection
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Select Category", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                val categories = listOf(
-                    "General Health", "Mental Health", "Pediatrics",
-                    "Dermatology", "Dentistry", "Gynecology"
+        Text("Select Category", fontWeight = FontWeight.SemiBold)
+        val categories = listOf("General Health", "Mental Health", "Pediatrics", "Dermatology", "Dentistry", "Gynecology")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            categories.forEach { item ->
+                FilterChip(
+                    selected = viewModel.category == item,
+                    onClick = { viewModel.category = item },
+                    label = { Text(item) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color.LightGray,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White
+                    )
                 )
-                FlowRow {
-                    categories.forEach { categoryItem ->
-                        FilterChip(
-                            selected = (viewModel.category == categoryItem),
-                            onClick = { viewModel.category = categoryItem },
-                            label = { Text(categoryItem) },
-                            shape = MaterialTheme.shapes.medium,
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Color.White,
-                                labelColor = Color.Black,
-                                selectedContainerColor = Color(0xFF2196F3),
-                                selectedLabelColor = Color.White
-                            )
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                }
             }
         }
 
-        // Consultation Type Selection
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("Consultation Type", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    listOf("Phone Consultation", "Video Consultation").forEach { methodItem ->
-                        FilterChip(
-                            selected = (viewModel.method == methodItem),
-                            onClick = { viewModel.method = methodItem },
-                            label = { Text(methodItem) },
-                            shape = MaterialTheme.shapes.medium,
-                            colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Color.White,
-                                labelColor = Color.Black,
-                                selectedContainerColor = Color(0xFF2196F3),
-                                selectedLabelColor = Color.White
-                            )
-                        )
-                    }
-                }
+        // Method Selection
+        Text("Consultation Type", fontWeight = FontWeight.SemiBold)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Phone Consultation", "Video Consultation").forEach { type ->
+                FilterChip(
+                    selected = viewModel.method == type,
+                    onClick = { viewModel.method = type },
+                    label = { Text(type) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = Color.LightGray,
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = Color.White
+                    )
+                )
             }
         }
 
-        // Email Input
+        // Email Field
         OutlinedTextField(
             value = viewModel.email,
             onValueChange = { viewModel.email = it },
@@ -138,27 +101,22 @@ fun ConsultationScreen(
         )
 
         // Date & Time Picker
-        DateTimeSelector(
-            dateTime = viewModel.dateTime,
-            onDateTimeSelected = { viewModel.dateTime = it }
-        )
+        DateTimeSelector(dateTime = viewModel.dateTime) {
+            viewModel.dateTime = it
+        }
 
         // Submit Button
         Button(
             onClick = {
                 viewModel.submitRequest()
-                if (viewModel.successMessage.isNotEmpty()) showConfirmationDialog = true
             },
-            enabled = !viewModel.isSubmitting,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (viewModel.isSubmitting) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text("Submitting...")
@@ -167,12 +125,8 @@ fun ConsultationScreen(
             }
         }
 
-        // Messages
         viewModel.errorMessage.takeIf { it.isNotEmpty() }?.let {
             Text(it, color = MaterialTheme.colorScheme.error)
-        }
-        viewModel.successMessage.takeIf { it.isNotEmpty() }?.let {
-            Text(it, color = MaterialTheme.colorScheme.primary)
         }
     }
 
@@ -191,64 +145,54 @@ fun ConsultationScreen(
 fun DateTimeSelector(dateTime: String, onDateTimeSelected: (String) -> Unit) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = dateTime,
-            onValueChange = {},
-            label = { Text("Preferred Date & Time") },
-            modifier = Modifier.weight(1f),
-            enabled = false,
-            trailingIcon = {
-                IconButton(onClick = {
-                    DatePickerDialog(
-                        context,
-                        { _, y, m, d ->
-                            calendar.set(y, m, d)
-                            TimePickerDialog(
-                                context,
-                                { _, h, min ->
-                                    calendar.set(Calendar.HOUR_OF_DAY, h)
-                                    calendar.set(Calendar.MINUTE, min)
-                                    onDateTimeSelected(
-                                        java.text.SimpleDateFormat(
-                                            "yyyy-MM-dd HH:mm", Locale.getDefault()
-                                        ).format(calendar.time)
-                                    )
-                                },
-                                calendar.get(Calendar.HOUR_OF_DAY),
-                                calendar.get(Calendar.MINUTE),
-                                true
-                            ).show()
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Select Date & Time"
-                    )
-                }
+
+    OutlinedTextField(
+        value = dateTime,
+        onValueChange = {},
+        label = { Text("Preferred Date & Time") },
+        modifier = Modifier.fillMaxWidth(),
+        enabled = false,
+        trailingIcon = {
+            IconButton(onClick = {
+                DatePickerDialog(
+                    context,
+                    { _, y, m, d ->
+                        calendar.set(y, m, d)
+                        TimePickerDialog(
+                            context,
+                            { _, h, min ->
+                                calendar.set(Calendar.HOUR_OF_DAY, h)
+                                calendar.set(Calendar.MINUTE, min)
+                                onDateTimeSelected(
+                                    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(calendar.time)
+                                )
+                            },
+                            calendar.get(Calendar.HOUR_OF_DAY),
+                            calendar.get(Calendar.MINUTE),
+                            true
+                        ).show()
+                    },
+                    calendar.get(Calendar.YEAR),
+                    calendar.get(Calendar.MONTH),
+                    calendar.get(Calendar.DAY_OF_MONTH)
+                ).show()
+            }) {
+                Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Date & Time")
             }
-        )
-    }
+        }
+    )
 }
 
 @Composable
 fun ConfirmationDialog(message: String, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Confirmation", fontWeight = FontWeight.Bold) },
-        text = { Text(message) },
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text("OK")
             }
-        }
+        },
+        title = { Text("Consultation Confirmed") },
+        text = { Text(message) }
     )
 }
