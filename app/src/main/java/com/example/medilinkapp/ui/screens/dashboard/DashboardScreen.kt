@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.wear.compose.material.ripple
 import com.example.medilinkapp.R
 import com.example.medilinkapp.ui.screens.healthmonitoring.SleekLoadingOverlay
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
@@ -319,7 +320,7 @@ fun LoadingConsultationScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Finding the best doctors for you...",
+                text = "Loading...",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF757575)
@@ -369,11 +370,12 @@ fun QuickActionButton(icon: Any, label: String, onClick: () -> Unit) {
                 .size(64.dp)
                 .clip(CircleShape)
                 .background(Color.White)
-                .border(width = 1.dp, color = Color.Black, shape = CircleShape)
+                .border(1.dp, Color.Black, CircleShape)
                 .clickable(
                     interactionSource = interactionSource,
-                    indication = rememberRipple(bounded = true, radius = 32.dp, color = Color.LightGray)
-                ) { onClick() }
+                    indication        = ripple(bounded = true, radius = 32.dp),
+                    onClick           = onClick
+                )
                 .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {

@@ -4,7 +4,8 @@ import androidx.annotation.DrawableRes
 
 data class Doctor(
     val name: String = "",
-    val specialization: String = "",
+    val email: String = "",
     val experience: String = "",
-    @DrawableRes val drawableId: Int? = null // No default image
+    val specialization: String = ""
 )
+

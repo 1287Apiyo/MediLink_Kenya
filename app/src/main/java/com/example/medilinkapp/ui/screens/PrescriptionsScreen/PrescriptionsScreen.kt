@@ -35,6 +35,7 @@ import com.example.medilinkapp.repository.FirestoreRepository
 import kotlinx.coroutines.launch
 import java.io.File
 
+//@OptIn(ExperimentalMaterial3Api::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrescriptionsScreen(navController: NavController) {

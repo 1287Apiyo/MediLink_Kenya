@@ -9,20 +9,23 @@ class FirestoreRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
 
-    // Fetch doctors from Firestore
+    // ✅ Clean and coroutine-friendly version
     suspend fun getDoctors(): List<Doctor> {
-        val snapshot = firestore.collection("doctors").get().await()
-        return snapshot.documents.mapNotNull { doc ->
-            doc.toObject(Doctor::class.java)
+        return try {
+            val snapshot = firestore.collection("doctors").get().await()
+            snapshot.documents.mapNotNull { it.toObject(Doctor::class.java) }
+        } catch (e: Exception) {
+            emptyList() // or throw e if you want to handle it upstream
         }
     }
 
+    // ✅ Same cleanup for prescriptions
     suspend fun getPrescriptions(): List<Prescription> {
-        val snapshot = firestore.collection("Prescription").get().await()
-        println("Fetched ${snapshot.documents.size} prescriptions from Firestore")
-        return snapshot.documents.mapNotNull { doc ->
-            doc.toObject(Prescription::class.java)?.copy(id = doc.id)
+        return try {
+            val snapshot = firestore.collection("prescriptions").get().await()
+            snapshot.documents.mapNotNull { it.toObject(Prescription::class.java) }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
-
 }

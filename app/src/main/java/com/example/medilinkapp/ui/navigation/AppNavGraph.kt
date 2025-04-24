@@ -49,7 +49,7 @@ fun AppNavGraph(context: Context) {
         composable("signup") { SignupScreen(navController) }
         composable("dashboard") { DashboardScreen(navController) }
         composable("loading-consultation") { LoadingConsultationScreen(navController) }
-        composable("consultation") { ConsultationScreen(navController) }
+        composable("consultation") {  ConsultationScreen(navController = navController) }
         composable("appointments") { AppointmentHistoryScreen(navController) }
         composable("loading-monitoring") { MonitoringLoadingScreen(navController) }
         composable("monitoring") { HealthMonitoringScreen(navController, stepCount) }

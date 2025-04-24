@@ -1,323 +1,254 @@
-// Full Kotlin file with enhanced functionality
-
 package com.example.medilinkapp.ui.screens.consultationbooking
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
+import ConsultationViewModel
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.Chat
-import androidx.compose.material.icons.outlined.VideoCall
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
-import com.example.medilinkapp.R
-import com.example.medilinkapp.model.Doctor
-import com.example.medilinkapp.repository.FirestoreRepository
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.math.round
-import kotlin.random.Random
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ConsultationScreen(navController: NavController) {
-    val repository = FirestoreRepository()
-    var doctors by remember { mutableStateOf(emptyList<Doctor>()) }
-    var filteredDoctors by remember { mutableStateOf(emptyList<Doctor>()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
+fun ConsultationScreen(
+    navController: NavHostController,
+    viewModel: ConsultationViewModel = viewModel()
+) {
+    var showConfirmationDialog by remember { mutableStateOf(false) }
 
-    var searchQuery by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("All") }
-    var minRating by remember { mutableStateOf(3.5f) }
-
-    val coroutineScope = rememberCoroutineScope()
-    val visible = remember { mutableStateOf(false) }
-    var isRefreshing by remember { mutableStateOf(false) }
-
-    fun loadDoctors() {
-        coroutineScope.launch {
-            try {
-                isRefreshing = true
-                delay(600)
-                doctors = repository.getDoctors().map { doctor ->
-                    doctor.copy(
-                        drawableId = when (doctor.name) {
-                            "Dr Sharon" -> R.drawable.doctor1
-                            "Dr Kimani" -> R.drawable.doctor2
-                            "Dr Muli" -> R.drawable.doctor3
-                            else -> R.drawable.doctor2
-                        }
-                    )
-                }
-                filteredDoctors = doctors
-                error = null
-            } catch (e: Exception) {
-                error = e.message
-            } finally {
-                isLoading = false
-                isRefreshing = false
-            }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        loadDoctors()
-        visible.value = true
-    }
-
-    LaunchedEffect(searchQuery, selectedType, minRating, doctors) {
-        filteredDoctors = doctors.filter {
-            val rating = Random.nextDouble(3.8, 5.0).toFloat()
-            val matchesName = it.name.contains(searchQuery, ignoreCase = true)
-            val matchesType = selectedType == "All" || it.specialization.equals(selectedType, ignoreCase = true)
-            val matchesRating = rating >= minRating
-            matchesName && matchesType && matchesRating
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Consult a Doctor", style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Serif,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        ))
-                        Text("Expert help at your fingertips", style = MaterialTheme.typography.labelSmall.copy(
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                        ))
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF1A237E))
-            )
-        }
-    ) { paddingValues ->
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Header
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(paddingValues)
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures { _, dragAmount ->
-                        if (dragAmount > 20) loadDoctors()
-                    }
-                }
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(vertical = 24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            AnimatedVisibility(
-                visible = visible.value,
-                enter = fadeIn(tween(600)) + slideInVertically(
-                    initialOffsetY = { it / 4 },
-                    animationSpec = tween(600)
-                )
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(bottom = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    item {
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            label = { Text("Search by name", fontFamily = FontFamily.Serif) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        DoctorTypeDropdown(selectedType) { selectedType = it }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text("Minimum Rating: ${round(minRating * 10) / 10}", fontFamily = FontFamily.Serif)
-                        Slider(
-                            value = minRating,
-                            onValueChange = { minRating = it },
-                            valueRange = 3.5f..5f,
-                            steps = 2
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Available Doctors", style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontFamily = FontFamily.Serif,
-                            color = MaterialTheme.colorScheme.secondary
-                        ))
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-
-                    when {
-                        isLoading -> item { LoadingState() }
-                        error != null -> item { ErrorState(error!!, onRetry = { isLoading = true; loadDoctors() }) }
-                        filteredDoctors.isEmpty() -> item { EmptyState() }
-                        else -> items(filteredDoctors) { doctor ->
-                            SmallDoctorCard(
-                                doctor = doctor,
-                                onVideoCall = { navController.navigate("videoCallScreen/${doctor.name}") },
-                                onChat = { navController.navigate("chatScreen/${doctor.name}") },
-                                onBookAppointment = { navController.navigate("appointmentBookingScreen/${doctor.name}") }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DoctorTypeDropdown(selected: String, onSelected: (String) -> Unit) {
-    val types = listOf("All", "General", "Pediatrician", "Dentist", "Psychologist", "Dermatologist")
-    var expanded by remember { mutableStateOf(false) }
-
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-        OutlinedTextField(
-            value = selected,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text("Filter by specialization", fontFamily = FontFamily.Serif) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
-        )
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            types.forEach { type ->
-                DropdownMenuItem(
-                    text = { Text(type) },
-                    onClick = {
-                        onSelected(type)
-                        expanded = false
-                    }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun LoadingState() {
-    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Loading doctors...", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@Composable
-fun ErrorState(error: String, onRetry: () -> Unit) {
-    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("Error: $error", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
-    }
-}
-
-@Composable
-fun EmptyState() {
-    Box(modifier = Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Filled.Star, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("No doctors available.", style = MaterialTheme.typography.bodySmall)
-        }
-    }
-}
-
-@Composable
-fun SmallDoctorCard(
-    doctor: Doctor,
-    onVideoCall: () -> Unit,
-    onChat: () -> Unit,
-    onBookAppointment: () -> Unit
-) {
-    val rating = remember { Random.nextDouble(3.8, 5.0).toFloat() }
-    val isAvailable = remember { Random.nextBoolean() }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .clickable { onVideoCall() }
-            .border(1.dp, Color.Black, RoundedCornerShape(8.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = doctor.drawableId ?: R.drawable.doctor2),
-                contentDescription = null,
-                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
+            Text(
+                text = "Book a Consultation",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(doctor.name, style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Serif
-                ))
-                Text(doctor.specialization, style = MaterialTheme.typography.bodySmall)
-                Text(doctor.experience, style = MaterialTheme.typography.bodySmall)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.Star, contentDescription = "Rating", tint = Color(0xFFFFC107), modifier = Modifier.size(16.dp))
-                    Text("$rating", style = MaterialTheme.typography.bodySmall)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Box(
-                        modifier = Modifier.size(10.dp).clip(CircleShape).background(if (isAvailable) Color.Green else Color.Red)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (isAvailable) "Available" else "Busy", style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(onClick = onVideoCall) {
-                    Icon(Icons.Outlined.VideoCall, contentDescription = "Video Call", tint = MaterialTheme.colorScheme.primary)
-                }
-                IconButton(onClick = onChat) {
-                    Icon(Icons.Outlined.Chat, contentDescription = "Chat", tint = MaterialTheme.colorScheme.secondary)
-                }
-                Button(onClick = onBookAppointment, shape = RoundedCornerShape(4.dp), contentPadding = PaddingValues(4.dp)) {
-                    Text("Book", fontSize = 12.sp)
+        }
+
+        // Category Selection
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Select Category", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                val categories = listOf(
+                    "General Health", "Mental Health", "Pediatrics",
+                    "Dermatology", "Dentistry", "Gynecology"
+                )
+                FlowRow {
+                    categories.forEach { categoryItem ->
+                        FilterChip(
+                            selected = (viewModel.category == categoryItem),
+                            onClick = { viewModel.category = categoryItem },
+                            label = { Text(categoryItem) },
+                            shape = MaterialTheme.shapes.medium,
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Color.White,
+                                labelColor = Color.Black,
+                                selectedContainerColor = Color(0xFF2196F3),
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                 }
             }
         }
+
+        // Consultation Type Selection
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("Consultation Type", fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    listOf("Phone Consultation", "Video Consultation").forEach { methodItem ->
+                        FilterChip(
+                            selected = (viewModel.method == methodItem),
+                            onClick = { viewModel.method = methodItem },
+                            label = { Text(methodItem) },
+                            shape = MaterialTheme.shapes.medium,
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = Color.White,
+                                labelColor = Color.Black,
+                                selectedContainerColor = Color(0xFF2196F3),
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        // Email Input
+        OutlinedTextField(
+            value = viewModel.email,
+            onValueChange = { viewModel.email = it },
+            label = { Text("Email Address") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+        )
+
+        // Date & Time Picker
+        DateTimeSelector(
+            dateTime = viewModel.dateTime,
+            onDateTimeSelected = { viewModel.dateTime = it }
+        )
+
+        // Submit Button
+        Button(
+            onClick = {
+                viewModel.submitRequest()
+                if (viewModel.successMessage.isNotEmpty()) showConfirmationDialog = true
+            },
+            enabled = !viewModel.isSubmitting,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            if (viewModel.isSubmitting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("Submitting...")
+            } else {
+                Text("Submit Request")
+            }
+        }
+
+        // Messages
+        viewModel.errorMessage.takeIf { it.isNotEmpty() }?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
+        viewModel.successMessage.takeIf { it.isNotEmpty() }?.let {
+            Text(it, color = MaterialTheme.colorScheme.primary)
+        }
     }
+
+    if (showConfirmationDialog) {
+        ConfirmationDialog(
+            message = viewModel.successMessage,
+            onDismiss = {
+                showConfirmationDialog = false
+                navController.popBackStack()
+            }
+        )
+    }
+}
+
+@Composable
+fun DateTimeSelector(dateTime: String, onDateTimeSelected: (String) -> Unit) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        OutlinedTextField(
+            value = dateTime,
+            onValueChange = {},
+            label = { Text("Preferred Date & Time") },
+            modifier = Modifier.weight(1f),
+            enabled = false,
+            trailingIcon = {
+                IconButton(onClick = {
+                    DatePickerDialog(
+                        context,
+                        { _, y, m, d ->
+                            calendar.set(y, m, d)
+                            TimePickerDialog(
+                                context,
+                                { _, h, min ->
+                                    calendar.set(Calendar.HOUR_OF_DAY, h)
+                                    calendar.set(Calendar.MINUTE, min)
+                                    onDateTimeSelected(
+                                        java.text.SimpleDateFormat(
+                                            "yyyy-MM-dd HH:mm", Locale.getDefault()
+                                        ).format(calendar.time)
+                                    )
+                                },
+                                calendar.get(Calendar.HOUR_OF_DAY),
+                                calendar.get(Calendar.MINUTE),
+                                true
+                            ).show()
+                        },
+                        calendar.get(Calendar.YEAR),
+                        calendar.get(Calendar.MONTH),
+                        calendar.get(Calendar.DAY_OF_MONTH)
+                    ).show()
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowDropDown,
+                        contentDescription = "Select Date & Time"
+                    )
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun ConfirmationDialog(message: String, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirmation", fontWeight = FontWeight.Bold) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("OK")
+            }
+        }
+    )
 }
