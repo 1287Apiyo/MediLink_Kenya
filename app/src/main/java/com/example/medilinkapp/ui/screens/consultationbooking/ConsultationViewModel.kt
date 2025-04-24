@@ -26,6 +26,16 @@ class ConsultationViewModel : ViewModel() {
     var selectedDoctor: Doctor? = null
     var isSubmitting by mutableStateOf(false)
 
+    fun resetFields() {
+        category = ""
+        method = ""
+        email = ""
+        dateTime = ""
+        errorMessage = ""
+        successMessage = ""
+        selectedDoctor = null
+    }
+
     fun submitRequest() {
         successMessage = ""
         errorMessage = ""
