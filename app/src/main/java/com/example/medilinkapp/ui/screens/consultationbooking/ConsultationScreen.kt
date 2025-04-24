@@ -58,7 +58,7 @@ fun ConsultationScreen(
             SmallTopAppBar(
                 title = { Text("Book a Consultation") },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    containerColor = Color(0xFF1A237E),
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
@@ -85,7 +85,7 @@ fun ConsultationScreen(
                             onClick = { viewModel.category = category },
                             label = { Text(category) },
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Color.LightGray,
+                                containerColor = Color.White,
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = Color.White
                             )
@@ -103,7 +103,7 @@ fun ConsultationScreen(
                             onClick = { viewModel.method = method },
                             label = { Text(method) },
                             colors = FilterChipDefaults.filterChipColors(
-                                containerColor = Color.LightGray,
+                                containerColor = Color.White,
                                 selectedContainerColor = MaterialTheme.colorScheme.primary,
                                 selectedLabelColor = Color.White
                             )

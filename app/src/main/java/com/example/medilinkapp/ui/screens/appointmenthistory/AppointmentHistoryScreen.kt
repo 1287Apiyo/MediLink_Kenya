@@ -4,6 +4,7 @@ import Appointment
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,10 +20,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.medilinkapp.R
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 
@@ -83,7 +86,6 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF1A237E)
                 )
-
             )
         }
     ) { paddingValues ->
@@ -109,7 +111,14 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 0 -> {
                     if (upcomingAppointments.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No upcoming appointments.", fontFamily = FontFamily.Serif)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.naah), // Replace with your image resource
+                                    contentDescription = "No upcoming appointments",
+                                    modifier = Modifier.size(120.dp)
+                                )
+                                Text("No upcoming appointments.", fontFamily = FontFamily.Serif)
+                            }
                         }
                     } else {
                         LazyColumn(
@@ -160,7 +169,14 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 1 -> {
                     if (pastAppointments.isEmpty()) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No past appointments.", fontFamily = FontFamily.Serif)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.naah), // Replace with your image resource
+                                    contentDescription = "No past appointments",
+                                    modifier = Modifier.size(120.dp)
+                                )
+                                Text("No past appointments.", fontFamily = FontFamily.Serif)
+                            }
                         }
                     } else {
                         LazyColumn(
@@ -173,7 +189,6 @@ fun AppointmentHistoryScreen(navController: NavController) {
                                     visible = true,
                                     enter = fadeIn(animationSpec = tween(durationMillis = 500))
                                 ) {
-                                    // Updated compact card with a "Rebook & Call" button.
                                     CompactAppointmentCard(
                                         appointment = appointment,
                                         onDelete = {
