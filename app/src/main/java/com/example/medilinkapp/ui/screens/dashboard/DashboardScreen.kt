@@ -193,7 +193,7 @@ fun DashboardScreen(navController: NavController) {
                             navController.navigate("loading-consultation")
 
                         }
-                        QuickActionButton(R.drawable.appointment, "Appointments") {
+                        QuickActionButton(R.drawable.appointment, "MyAfyaCenter") {
                             navController.navigate("appointments")
                         }
                         QuickActionButton(R.drawable.healthmon, "Monitoring") {
