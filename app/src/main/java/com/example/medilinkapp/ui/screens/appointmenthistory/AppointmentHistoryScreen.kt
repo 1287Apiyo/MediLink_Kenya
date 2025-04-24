@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -64,21 +65,24 @@ fun AppointmentHistoryScreen(navController: NavController) {
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "Welcome to Afya Centre",
+                    text = "Welcome to myAfyaCentre",
                     fontFamily = FontFamily.Serif,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Here, you'll find educational materials on various diseases, wellness tips, and ways to maintain your health. Explore the topics below to learn more.",
                     fontFamily = FontFamily.Serif,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodySmall,
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+
                 )
             }
 
