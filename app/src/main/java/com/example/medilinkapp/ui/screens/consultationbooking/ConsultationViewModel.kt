@@ -52,6 +52,26 @@ class ConsultationViewModel : ViewModel() {
         }
     }
 
+    // 🔥 Delete a consultation from Firestore and update the local list
+    fun deleteConsultation(consultation: Consultation) {
+        viewModelScope.launch {
+            try {
+                consultation.id?.let { docId ->
+                    firestore.collection("consultation_requests").document(docId).delete().await()
+
+                    // Update the local list
+                    consultations = consultations.filterNot { it.id == docId }
+
+                    successMessage = "Consultation deleted successfully."
+                } ?: run {
+                    errorMessage = "Consultation ID is null."
+                }
+            } catch (e: Exception) {
+                errorMessage = "Failed to delete consultation: ${e.localizedMessage}"
+            }
+        }
+    }
+
     // Get a consultation by ID
     fun getConsultationById(consultationId: String): Consultation? {
         return consultations.find { it.id == consultationId }
@@ -82,7 +102,6 @@ class ConsultationViewModel : ViewModel() {
             try {
                 isSubmitting = true
 
-                // Get doctors based on category
                 val doctors = repo.getDoctors().filter {
                     it.specialization.equals(category, ignoreCase = true)
                 }
@@ -94,7 +113,6 @@ class ConsultationViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Save consultation request to Firestore
                 val consultationData = hashMapOf(
                     "userEmail" to email,
                     "category" to category,
@@ -109,6 +127,7 @@ class ConsultationViewModel : ViewModel() {
                     .add(consultationData)
                     .addOnSuccessListener {
                         successMessage = "Consultation with Dr. ${selectedDoctor!!.name} confirmed!"
+                        fetchConsultations() // Refresh the list after adding
                     }
                     .addOnFailureListener {
                         errorMessage = "Failed to save request. Try again."

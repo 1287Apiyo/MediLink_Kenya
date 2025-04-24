@@ -2,6 +2,8 @@ package com.example.medilinkapp.navigation
 
 import ViewConsultationsScreen
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
 import com.example.medilinkapp.viewmodel.ConsultationViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNavGraph(context: Context, viewModel: ConsultationViewModel) {
@@ -107,23 +110,19 @@ fun AppNavGraph(context: Context, viewModel: ConsultationViewModel) {
         }
 
         composable(
-            route = "videoCallScreen/{doctorName}",
+            route = "video_call/{doctorName}",
             arguments = listOf(navArgument("doctorName") { type = NavType.StringType })
         ) { backStackEntry ->
-            VideoCallScreen(
-                navController = navController,
-                doctorName = backStackEntry.arguments?.getString("doctorName") ?: ""
-            )
+            val doctorName = backStackEntry.arguments?.getString("doctorName") ?: "Doctor"
+            VideoCallScreen(navController = navController, doctorName = doctorName)
         }
 
         composable(
-            route = "chatScreen/{doctorName}",
+            route = "chat/{doctorName}",
             arguments = listOf(navArgument("doctorName") { type = NavType.StringType })
         ) { backStackEntry ->
-            ChatScreen(
-                navController = navController,
-                doctorName = backStackEntry.arguments?.getString("doctorName") ?: ""
-            )
+            val doctorName = backStackEntry.arguments?.getString("doctorName") ?: "Doctor"
+            ChatScreen(navController = navController, doctorName = doctorName)
         }
 
         composable(
