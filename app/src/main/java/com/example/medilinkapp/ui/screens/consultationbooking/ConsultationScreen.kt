@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Email
@@ -49,7 +50,6 @@ fun ConsultationScreen(
             pricePreference = 50f
             showConfirmationDialog = true
         }
-
     }
 
     Scaffold(
@@ -57,6 +57,11 @@ fun ConsultationScreen(
         topBar = {
             SmallTopAppBar(
                 title = { Text("Book a Consultation") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.Filled.ArrowBack, tint = Color.White,contentDescription = "Back")
+                    }
+                },
                 colors = TopAppBarDefaults.smallTopAppBarColors(
                     containerColor = Color(0xFF1A237E),
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -176,6 +181,17 @@ fun ConsultationScreen(
                 } else {
                     Text("Submit Request", fontSize = 16.sp, color = Color.White)
                 }
+            }
+
+            // View Consultations Button
+            Button(
+                onClick = { navController.navigate("view_consultations") },
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            ) {
+                Text("View Consultations", fontSize = 16.sp, color = Color.White)
             }
         }
 
