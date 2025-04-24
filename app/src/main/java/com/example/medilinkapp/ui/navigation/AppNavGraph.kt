@@ -1,5 +1,6 @@
 package com.example.medilinkapp.navigation
 
+import ViewConsultationsScreen
 import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -31,7 +32,6 @@ import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.signup.SignupScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
-import com.example.medilinkapp.ui.screens.viewconsultations.ViewConsultationsScreen
 import com.example.medilinkapp.viewmodel.ConsultationViewModel
 import com.google.firebase.auth.FirebaseAuth
 
