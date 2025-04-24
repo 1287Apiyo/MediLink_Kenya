@@ -3,18 +3,26 @@ package com.example.medilinkapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.medilinkapp.ui.navigation.AppNavGraph
+import androidx.activity.viewModels
+import com.example.medilinkapp.navigation.AppNavGraph
 import com.example.medilinkapp.ui.theme.MedilinkAppTheme
+import com.example.medilinkapp.viewmodel.ConsultationViewModel
 
- class MainActivity : ComponentActivity() {
+class MainActivity : ComponentActivity() {
+    // Get the ConsultationViewModel instance
+    private val consultationViewModel: ConsultationViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
-         // Switch to the normal theme before setting the content
-        setTheme(R.style.Theme_MedilinkApp)
         super.onCreate(savedInstanceState)
+
+        // Switch to the normal theme before setting the content
+        setTheme(R.style.Theme_MedilinkApp)
+
         setContent {
             MedilinkAppTheme {
-                AppNavGraph(context = this)
+                // Pass the viewModel to AppNavGraph
+                AppNavGraph(viewModel = consultationViewModel, context = this)
             }
-        } 
+        }
     }
 }

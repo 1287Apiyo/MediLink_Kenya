@@ -1,4 +1,4 @@
-package com.example.medilinkapp.ui.navigation
+package com.example.medilinkapp.navigation
 
 import android.content.Context
 import androidx.compose.animation.*
@@ -17,12 +17,12 @@ import com.example.medilinkapp.ui.screens.consultationbooking.AppointmentBooking
 import com.example.medilinkapp.ui.screens.consultationbooking.ChatScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.ConsultationScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.VideoCallScreen
+import com.example.medilinkapp.ui.screens.consultationdetail.ConsultationDetailScreen
 import com.example.medilinkapp.ui.screens.dashboard.DashboardScreen
 import com.example.medilinkapp.ui.screens.dashboard.LoadingConsultationScreen
 import com.example.medilinkapp.ui.screens.dashboard.MonitoringLoadingScreen
 import com.example.medilinkapp.ui.screens.healthmonitoring.HealthMonitoringScreen
 import com.example.medilinkapp.ui.screens.healthrecords.HealthRecordsScreen
-
 import com.example.medilinkapp.ui.screens.login.LoginScreen
 import com.example.medilinkapp.ui.screens.maps.MapScreen
 import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
@@ -31,11 +31,13 @@ import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.signup.SignupScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
+import com.example.medilinkapp.ui.screens.viewconsultations.ViewConsultationsScreen
+import com.example.medilinkapp.viewmodel.ConsultationViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AppNavGraph(context: Context) {
+fun AppNavGraph(context: Context, viewModel: ConsultationViewModel) {
     val navController = rememberNavController()
     val startDestination =
         if (FirebaseAuth.getInstance().currentUser != null) "dashboard" else "welcome"
@@ -50,7 +52,7 @@ fun AppNavGraph(context: Context) {
         composable("signup") { SignupScreen(navController) }
         composable("dashboard") { DashboardScreen(navController) }
         composable("loading-consultation") { LoadingConsultationScreen(navController) }
-        composable("consultation") {  ConsultationScreen(navController = navController) }
+        composable("consultation") { ConsultationScreen(navController = navController) }
         composable("appointments") { AppointmentHistoryScreen(navController) }
         composable("loading-monitoring") { MonitoringLoadingScreen(navController) }
         composable("monitoring") { HealthMonitoringScreen(navController, stepCount) }
@@ -58,7 +60,7 @@ fun AppNavGraph(context: Context) {
         composable("symptom_checker") { SymptomCheckerScreen(navController) }
         composable("prescriptions") { PrescriptionsScreen(navController) }
 
-        // ✅ Animated transition for Pharmacy screen
+        // Animated transition for Pharmacy screen
         composable(
             route = "pharmacy",
             enterTransition = {
@@ -132,6 +134,20 @@ fun AppNavGraph(context: Context) {
                 navController = navController,
                 doctorName = backStackEntry.arguments?.getString("doctorName") ?: ""
             )
+        }
+
+        // New navigation setup for ViewConsultationsScreen and ConsultationScreen
+        composable("view_consultations") {
+            ViewConsultationsScreen(navController = navController, viewModel = viewModel)
+        }
+        composable("consultation_booking") {
+            ConsultationScreen(navController = navController, viewModel = viewModel)
+        }
+
+        // For consultation details
+        composable("consultation_detail/{consultationId}") { backStackEntry ->
+            val consultationId = backStackEntry.arguments?.getString("consultationId")
+            ConsultationDetailScreen(consultationId = consultationId, viewModel = viewModel)
         }
     }
 }
