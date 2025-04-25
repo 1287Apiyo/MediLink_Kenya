@@ -2,18 +2,20 @@ package com.example.medilinkapp.ui.screens.appointmenthistory
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -26,12 +28,12 @@ import com.example.medilinkapp.R
 @Composable
 fun AppointmentHistoryScreen(navController: NavController) {
     val healthTopics = listOf(
-        HealthTopic("Sexual Wellness", R.drawable.naah),
-        HealthTopic("Mental Health", R.drawable.ai),
-        HealthTopic("Diabetes", R.drawable.ai),
-        HealthTopic("Hypertension", R.drawable.pharm),
-        HealthTopic("Asthma", R.drawable.naah),
-        HealthTopic("Pediatrics", R.drawable.naah)
+        HealthTopic("Sexual Wellness", R.drawable.sexualhealth),
+        HealthTopic("Mental Health", R.drawable.mental),
+        HealthTopic("Diabetes", R.drawable.diabetes),
+        HealthTopic("Hypertension", R.drawable.hypertension),
+        HealthTopic("Asthma", R.drawable.asthma),
+        HealthTopic("Pediatrics", R.drawable.pediatrics)
     )
 
     Scaffold(
@@ -42,7 +44,7 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, tint = Color.White, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -51,21 +53,19 @@ fun AppointmentHistoryScreen(navController: NavController) {
             )
         }
     ) { paddingValues ->
-        // Main content area
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(paddingValues)
         ) {
-            // Welcome Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
                 Text(
-                    text = "Welcome to myAfyaCentre",
+                    text = "Welcome to AfyaCentre",
                     fontFamily = FontFamily.Serif,
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Black,
@@ -81,12 +81,10 @@ fun AppointmentHistoryScreen(navController: NavController) {
                     color = Color.Black,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold
-
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            // Displaying health topics in a grid format (2 items per row)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize(),
@@ -95,7 +93,9 @@ fun AppointmentHistoryScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(healthTopics) { topic ->
-                    HealthTopicCard(topic = topic)
+                    HealthTopicCard(topic = topic) {
+                        navController.navigate("topic_detail/${topic.name}")
+                    }
                 }
             }
         }
@@ -103,41 +103,48 @@ fun AppointmentHistoryScreen(navController: NavController) {
 }
 
 @Composable
-fun HealthTopicCard(topic: HealthTopic) {
+fun HealthTopicCard(topic: HealthTopic, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp) // Adjust card size
-            .padding(vertical = 8.dp),
+            .height(200.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White) // White background for the card
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Display image corresponding to each health topic
-            Image(
-                painter = painterResource(id = topic.imageRes), // Use the image resource from the HealthTopic object
-                contentDescription = "${topic.name} Icon",
-                modifier = Modifier.size(60.dp) // Adjust image size
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = topic.name,
-                fontFamily = FontFamily.Serif,
-                color = Color.Black, // Black text color
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                Image(
+                    painter = painterResource(id = topic.imageRes),
+                    contentDescription = "${topic.name} Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = topic.name,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
 
-// Data class to hold each health topic with its corresponding image resource
 data class HealthTopic(val name: String, val imageRes: Int)

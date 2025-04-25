@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.medilinkapp.ui.screens.*
 import com.example.medilinkapp.ui.screens.appointmenthistory.AppointmentHistoryScreen
+import com.example.medilinkapp.ui.screens.appointmenthistory.HealthTopicDetailScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.AppointmentBookingScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.ChatScreen
 import com.example.medilinkapp.ui.screens.consultationbooking.ConsultationScreen
@@ -64,6 +65,14 @@ fun AppNavGraph(context: Context, viewModel: ConsultationViewModel) {
         composable("prescriptions") { PrescriptionsScreen(navController) }
 
         // Animated transition for Pharmacy screen
+        composable(
+            route = "topic_detail/{topicName}",
+            arguments = listOf(navArgument("topicName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val topicName = backStackEntry.arguments?.getString("topicName") ?: "Unknown Topic"
+            HealthTopicDetailScreen(topicName = topicName, navController = navController)
+        }
+
         composable(
             route = "pharmacy",
             enterTransition = {
