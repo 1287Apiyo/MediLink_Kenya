@@ -28,7 +28,8 @@ import com.example.medilinkapp.R
 @Composable
 fun HealthTopicDetailScreen(topicName: String, navController: NavController) {
     val topicContent = healthTopicContents[topicName]!!
-    val bannerImageRes = getBannerImage(topicName)
+    val firstBannerImageRes = getBannerImage(topicName)
+    val secondBannerImageRes = getSecondBannerImage(topicName)
 
     Scaffold(
         topBar = {
@@ -51,57 +52,74 @@ fun HealthTopicDetailScreen(topicName: String, navController: NavController) {
     ) { paddingValues ->
         Column(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
-                .fillMaxSize()
                 .background(Color(0xFFF9F9F9))
+                .padding(horizontal = 16.dp, vertical = 20.dp)
         ) {
-            // Dynamic Topic Banner
+            // First Banner Image – full height, no cropping
             Image(
-                painter = painterResource(id = bannerImageRes),
+                painter = painterResource(id = firstBannerImageRes),
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.Crop
+                    .wrapContentHeight()
+                    .padding(bottom = 20.dp),
+                contentScale = ContentScale.FillWidth
             )
 
-            Column(modifier = Modifier.padding(20.dp)) {
-                topicContent.forEach { (sectionTitle, sectionContent) ->
-                    Text(
-                        text = sectionTitle,
-                        style = TextStyle(
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1A237E)
-                        ),
-                        modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
-                    )
+            var sectionCounter = 0
+            topicContent.forEach { (sectionTitle, sectionContent) ->
+                Text(
+                    text = sectionTitle,
+                    style = TextStyle(
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF1A237E)
+                    ),
+                    modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
+                )
 
-                    if (sectionTitle.contains("Resources", ignoreCase = true)) {
-                        sectionContent.split("\n").forEach { line ->
-                            val regex = Regex("""\[(.*?)\]\((.*?)\)""")
-                            val match = regex.find(line)
-                            if (match != null) {
-                                val (linkText, url) = match.destructured
-                                ClickableLink(linkText, url)
-                            }
+                if (sectionTitle.contains("Resources", ignoreCase = true)) {
+                    sectionContent.split("\n").forEach { line ->
+                        val regex = Regex("""\[(.*?)\]\((.*?)\)""")
+                        val match = regex.find(line)
+                        if (match != null) {
+                            val (linkText, url) = match.destructured
+                            ClickableLink(linkText, url)
                         }
-                    } else {
-                        sectionContent.trim().lines().forEach { line ->
-                            if (line.startsWith("-")) {
-                                BulletPointText(line.removePrefix("- ").trim())
-                            } else {
-                                Text(
-                                    text = line.trim(),
-                                    style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
-                                    modifier = Modifier.padding(bottom = 10.dp)
-                                )
-                            }
+                    }
+                } else {
+                    sectionContent.trim().lines().forEach { line ->
+                        if (line.startsWith("-")) {
+                            BulletPointText(line.removePrefix("- ").trim())
+                        } else {
+                            Text(
+                                text = line.trim(),
+                                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 22.sp),
+                                modifier = Modifier.padding(bottom = 10.dp)
+                            )
                         }
                     }
                 }
+
+                sectionCounter++
+                if (sectionCounter == 3) {
+                    // Second Banner Image – also full height, no cropping
+                    Image(
+                        painter = painterResource(id = secondBannerImageRes),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight()
+                            .padding(vertical = 20.dp),
+                        contentScale = ContentScale.FillWidth
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -133,12 +151,24 @@ fun ClickableLink(text: String, url: String) {
 fun getBannerImage(topicName: String): Int {
     return when (topicName.lowercase()) {
         "sexual wellness" -> R.drawable.sexualhealth
-        "mental health" -> R.drawable.mental
-        "diabetes" -> R.drawable.diabetes
-        "hypertension" -> R.drawable.hypertension
-        "asthma" -> R.drawable.asthma
-        "pediatrics" -> R.drawable.pediatrics
-        else -> R.drawable.pharm
+        "mental health"    -> R.drawable.mental
+        "diabetes"         -> R.drawable.diabetes
+        "hypertension"     -> R.drawable.hypertension
+        "asthma"           -> R.drawable.asthma
+        "pediatrics"       -> R.drawable.pediatrics
+        else               -> R.drawable.pharm
     }
 }
 
+@Composable
+fun getSecondBannerImage(topicName: String): Int {
+    return when (topicName.lowercase()) {
+        "sexual wellness" -> R.drawable.sexualhealth2
+        "mental health"    -> R.drawable.mental2
+        "diabetes"         -> R.drawable.diabetes2
+        "hypertension"     -> R.drawable.hypertension2
+        "asthma"           -> R.drawable.asthma2
+        "pediatrics"       -> R.drawable.pediatrics2
+        else               -> R.drawable.pharm
+    }
+}
