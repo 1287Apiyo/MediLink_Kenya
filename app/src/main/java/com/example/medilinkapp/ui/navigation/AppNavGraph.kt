@@ -1,5 +1,6 @@
 package com.example.medilinkapp.navigation
 
+import ProfileScreen
 import ViewConsultationsScreen
 import android.content.Context
 import android.os.Build
@@ -35,7 +36,6 @@ import com.example.medilinkapp.ui.screens.signup.SignupScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
 import com.example.medilinkapp.viewmodel.ConsultationViewModel
-import com.example.yourapp.ui.screens.profile.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @RequiresApi(Build.VERSION_CODES.O)
