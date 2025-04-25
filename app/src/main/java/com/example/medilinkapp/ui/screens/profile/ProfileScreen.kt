@@ -13,7 +13,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -25,13 +24,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,26 +40,42 @@ fun ProfileScreen(
     darkThemeEnabled: Boolean,
     onToggleTheme: () -> Unit
 ) {
-    // ---- Authentication & user data ----
+    // --- Firebase instances ---
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
-    val name = currentUser?.displayName ?: "User Name"
-    val email = currentUser?.email ?: "Email"
-    val phoneNumber = currentUser?.phoneNumber ?: "Phone Number"
+    val firestore = FirebaseFirestore.getInstance()
+    val uid = currentUser?.uid
 
-    // ---- Local UI state ----
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    val profileImageUri = remember { mutableStateOf<Uri?>(null) }
+    // --- UI state for user fields ---
+    var name by remember { mutableStateOf("User Name") }
+    var email by remember { mutableStateOf(currentUser?.email ?: "Email") }
+    var phoneNumber by remember { mutableStateOf("Phone Number") }
 
-    // ---- Image picker launcher ----
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) {
-        profileImageUri.value = it
+    // Fetch fullName & phone from Firestore once
+    LaunchedEffect(uid) {
+        if (uid != null) {
+            try {
+                val doc = firestore.collection("users")
+                    .document(uid)
+                    .get()
+                    .await()
+                doc.getString("fullName")?.let { name = it }
+                doc.getString("phone")?.let { phoneNumber = it }
+            } catch (e: Exception) {
+                // handle errors if needed
+            }
+        }
     }
 
+    // --- Local UI state ---
+    var notificationsEnabled by remember { mutableStateOf(true) }
+    val profileImageUri = remember { mutableStateOf<Uri?>(null) }
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { profileImageUri.value = it }
+
     Scaffold(
-        containerColor = Color.White,               // make content area white
+        containerColor = Color.White,
         topBar = {
             TopAppBar(
                 title = {
@@ -110,17 +126,14 @@ fun ProfileScreen(
         ) {
             Spacer(Modifier.height(16.dp))
 
-            // Profile Image
-            // … inside your Column …
-
+            // Profile picture with border and camera button
             Box(
                 modifier = Modifier
                     .size(130.dp)
-                    .border(2.dp, Color.Black, CircleShape)     // keep the border
+                    .border(2.dp, Color.Black, CircleShape)
                     .clickable { imagePickerLauncher.launch("image/*") },
                 contentAlignment = Alignment.Center
             ) {
-                // Clip only the image (or placeholder icon) to a circle:
                 if (profileImageUri.value != null) {
                     Image(
                         painter = rememberAsyncImagePainter(profileImageUri.value),
@@ -141,33 +154,30 @@ fun ProfileScreen(
                     )
                 }
 
-                // Single camera icon, offset outside the circle:
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
                     contentDescription = "Change Picture",
                     tint = Color.Black,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .offset(x = 12.dp, y = 12.dp)      // nudge it a bit further
-                        .size(40.dp)                       // larger container
+                        .offset(x = 12.dp, y = 12.dp)
+                        .size(40.dp)
                         .background(Color.White, CircleShape)
-                        .padding(8.dp)                     // more breathing room inside
+                        .padding(8.dp)
                 )
             }
 
-
-                Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(20.dp))
 
             // User info
-            Text(name,       fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(name,        fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             Spacer(Modifier.height(8.dp))
-            Text(email,      fontSize = 16.sp,                                  color = Color.Black)
+            Text(email,       fontSize = 16.sp,                                  color = Color.Black)
             Spacer(Modifier.height(4.dp))
-            Text(phoneNumber, fontSize = 16.sp,                                 color = Color.Black)
+            Text(phoneNumber, fontSize = 16.sp,                                  color = Color.Black)
 
             Spacer(Modifier.weight(1f))
 
-            // Logout
             Button(
                 onClick = {
                     auth.signOut()
