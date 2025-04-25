@@ -111,7 +111,7 @@ fun HealthTopicCard(topic: HealthTopic, onClick: () -> Unit) {
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -138,7 +138,7 @@ fun HealthTopicCard(topic: HealthTopic, onClick: () -> Unit) {
                     text = topic.name,
                     fontFamily = FontFamily.Serif,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black,
+                    color =  Color(0xFF1A237E),
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center
                 )
