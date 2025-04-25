@@ -111,22 +111,7 @@ fun DashboardScreen(navController: NavController) {
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(64.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.3f))
-                                    .padding(4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.AccountCircle,
-                                    contentDescription = "Profile",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(50.dp)
-                                )
-                            }
-
+                            // Remove profile image and replace it with a profile icon on the left side
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 if (isNameLoading) {
@@ -170,8 +155,32 @@ fun DashboardScreen(navController: NavController) {
                                     )
                                 )
                             }
+
+                            // Profile Icon on the far right
+                            Spacer(modifier = Modifier.weight(1f)) // To push the icon to the far right
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .clickable {
+                                        navController.navigate("profile") // Navigate to profile screen
+                                    }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Person,
+                                    contentDescription = "My Account",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Text(
+                                    text = "My Account",
+                                    color = Color.White,
+                                    fontSize = 12.sp
+                                )
+                            }
+
                         }
                     }
+
                 }
 
                 item {

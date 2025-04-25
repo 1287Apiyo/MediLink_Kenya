@@ -31,17 +31,22 @@ import com.example.medilinkapp.ui.screens.login.LoginScreen
 import com.example.medilinkapp.ui.screens.maps.MapScreen
 import com.example.medilinkapp.ui.screens.pharmacy.PharmacyScreen
 import com.example.medilinkapp.ui.screens.prescriptions.PrescriptionsScreen
-import com.example.medilinkapp.ui.screens.profile.ProfileScreen
 import com.example.medilinkapp.ui.screens.signup.SignupScreen
 import com.example.medilinkapp.ui.screens.symptomchecker.SymptomCheckerScreen
 import com.example.medilinkapp.ui.screens.welcome.WelcomeScreen
 import com.example.medilinkapp.viewmodel.ConsultationViewModel
+import com.example.yourapp.ui.screens.profile.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun AppNavGraph(context: Context, viewModel: ConsultationViewModel) {
+fun AppNavGraph(
+    context: Context,
+    viewModel: ConsultationViewModel,
+    darkThemeEnabled: Boolean,
+    onToggleTheme: () -> Unit
+) {
     val navController = rememberNavController()
     val startDestination =
         if (FirebaseAuth.getInstance().currentUser != null) "dashboard" else "welcome"
@@ -60,7 +65,14 @@ fun AppNavGraph(context: Context, viewModel: ConsultationViewModel) {
         composable("appointments") { AppointmentHistoryScreen(navController) }
         composable("loading-monitoring") { MonitoringLoadingScreen(navController) }
         composable("monitoring") { HealthMonitoringScreen(navController, stepCount) }
-        composable("profile") { ProfileScreen(navController) }
+        composable("profile") {
+            ProfileScreen(
+                navController = navController,
+                darkThemeEnabled = darkThemeEnabled,
+                onToggleTheme = onToggleTheme
+            )
+        }
+
         composable("symptom_checker") { SymptomCheckerScreen(navController) }
         composable("prescriptions") { PrescriptionsScreen(navController) }
 
