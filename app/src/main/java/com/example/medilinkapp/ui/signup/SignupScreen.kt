@@ -1,4 +1,4 @@
- package com.example.medilinkapp.ui.screens.signup
+package com.example.medilinkapp.ui.screens.signup
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
