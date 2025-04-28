@@ -199,7 +199,7 @@ fun DashboardScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         QuickActionButton(R.drawable.consultation, "Consultation") {
-                            navController.navigate("loading-consultation")
+                            navController.navigate("consultation")
 
                         }
                         QuickActionButton(R.drawable.appointment, "MyAfyaCenter") {
