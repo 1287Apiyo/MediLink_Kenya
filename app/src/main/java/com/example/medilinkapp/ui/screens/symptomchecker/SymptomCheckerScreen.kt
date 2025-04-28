@@ -131,9 +131,10 @@ fun SymptomCheckerScreen(navController: NavController) {
                                 val response = try {
                                     val apiKey = "AIzaSyDiILitp4R4MaTzfIdfyeclcs_hSOJIE6o" // Replace with your actual API key
                                     apiService.getMedicalResponse(
-                                        apiKey,
-                                        AIRequest(listOf(Content(listOf(Part(userInput.text)))))
-                                    ).candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "No response"
+                                        apiKey = "Bearer AIzaSyDiILitp4R4MaTzfIdfyeclcs_hSOJIE6o", // ADD Bearer
+                                        request = AIRequest(listOf(Content(listOf(Part(userInput.text)))))
+                                    )
+                                        .candidates.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "No response"
                                 } catch (e: Exception) {
                                     "Failed to fetch response. Please try again."
                                 }

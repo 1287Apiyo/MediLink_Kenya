@@ -161,37 +161,45 @@ fun ConsultationScreen(
             }
 
             // Submit Button
-            Button(
-                onClick = { viewModel.submitRequest() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp) // space between the buttons
             ) {
-                if (viewModel.isSubmitting) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Submitting...")
-                } else {
-                    Text("Submit Request", fontSize = 16.sp, color = Color.White)
+                // Submit Button
+                Button(
+                    onClick = { viewModel.submitRequest() },
+                    modifier = Modifier
+                        .weight(1f) // Make button take up equal space
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    if (viewModel.isSubmitting) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Submitting...")
+                    } else {
+                        Text("Submit Request", fontSize = 16.sp, color = Color.White)
+                    }
                 }
-            }
 
-            // View Consultations Button
-            Button(
-                onClick = { navController.navigate("view_consultations") },
-                modifier = Modifier.fillMaxWidth().height(52.dp),
-                shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-            ) {
-                Text("View Consultations", fontSize = 16.sp, color = Color.White)
+                // View Consultations Button
+                Button(
+                    onClick = { navController.navigate("view_consultations") },
+                    modifier = Modifier
+                        .weight(1f) // Make button take up equal space
+                        .height(52.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                ) {
+                    Text("View Consultations", fontSize = 16.sp, color = Color.White)
+                }
             }
         }
 
