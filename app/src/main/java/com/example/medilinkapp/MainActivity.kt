@@ -12,7 +12,7 @@ import com.example.medilinkapp.ui.theme.MedilinkAppTheme
 import com.example.medilinkapp.viewmodel.ConsultationViewModel
 
 class MainActivity : ComponentActivity() {
-private val consultationViewModel: ConsultationViewModel by viewModels()
+  private val consultationViewModel: ConsultationViewModel by viewModels()
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
