@@ -20,7 +20,6 @@ class MainActivity : ComponentActivity() {
         setTheme(R.style.Theme_MedilinkApp)
 
         setContent {
-            // Global dark mode toggle
             var darkThemeEnabled by remember { mutableStateOf(false) }
 
             MedilinkAppTheme(darkTheme = darkThemeEnabled) {
